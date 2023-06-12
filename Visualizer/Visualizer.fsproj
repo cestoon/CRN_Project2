@@ -13,4 +13,8 @@
     <ProjectReference Include="..\State\State.fsproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Plotly.NET" Version="4.0.0" />
+  </ItemGroup>
+
 </Project>
