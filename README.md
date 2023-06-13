@@ -20,7 +20,7 @@ This project does what it says, it provides the type checking function and imple
 
 - Checking that conditionals only appear after a comparison (not in the same step)
 - Checking for cyclical dependencies within steps
-- Checking that all species/variables used have been defined either as  
+- Checking that all species/variables used have been defined either as (Doesn't seem to actually be a restriction. see Fig 9 for example of it being broken)
   - an initial concentrations (concS)
   - the result of a module or reaction in the same or a previous step
 - Check the restrictions of the modules are satisfied
@@ -63,33 +63,33 @@ The below chart shows which order different parts of the code needs to be develo
 
 ```mermaid
 graph RL;
-    AST([AST])
+    Interp([Interpreter])
     ChemSim([ChemicalSimulator])
+    AST([AST])
     Compiler([Compiler])
     CompilerTest([CompilerTests])
-    Interp([Interpreter])
-    Parser([Parser])
-    ParserTests([ParserTests])
     TypeCheck([TypeChecker])
     Visual([Visualizer])
+    Parser([Parser])
+    ParserTests([ParserTests])
     State([State])
 
-    Parser--->AST;
-    Interp-->AST;
-    Compiler----> AST;
-    TypeCheck--->AST;
+    Parser-->AST;
 
-    ParserTests-->Parser;
     ChemSim--> Parser;
-    Interp.->Parser;
 
-    CompilerTest-->Interp;
     Visual.->Interp;
 
-    Interp-->State;
+    ChemSim-->State;
     Visual--> State;
-    Compiler-->State;
+    Interp..->Parser;
+    ParserTests-->Parser;
+    Interp-->State;
+    Interp-->AST;
 
+    Compiler--> AST;
+    TypeCheck-->AST;
+    CompilerTest-->Interp;
     CompilerTest-->Compiler;
 
     CompilerTest-->ChemSim;
