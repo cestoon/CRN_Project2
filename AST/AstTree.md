@@ -9,21 +9,33 @@
     Command[Command]
     Condition[Condition]
     Comparison[Comparison]
-    Arithmetic[Arithmetic]
-    Expr[Expr]
+    LD[LD]
+    Add[Add]
+    Sub[Sub]
+    Mul[Mul]
+    Div[Div]
+    Sqrt[Sqrt]
+    
     Species[Species]
     Number[Number]
 
     CRN --> RootList
     RootList --> Root
     Root --> Concentration
-    Root --> Step
+    Concentration --> Species
+    Concentration --> Number
+    Root --> Steplist --> Step
     Step --> CommandList
     CommandList --> Command
     Command --> Condition
-    Command --> Comparison
-    Command --> Arithmetic
-    Arithmetic --> Expr
-    Expr --> Species
-    Expr --> Number
+    Command --> composible
+    Command --> non-composible
+    composible --> LD
+    composible --> Add
+    composible --> Sub
+    composible --> Mul
+    composible --> Div
+    composible --> Sqrt
+    non-composible --> Comparison
+    
 ```

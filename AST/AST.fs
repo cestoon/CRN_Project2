@@ -11,7 +11,7 @@ type ConditionalS =
 
 and CommandS = 
     | RxnS of Expr * Expr * float  // reaction speed
-    | ArithmeticS of ModuleS
+    | ArithmeticS of ModuleS 
     | CmpS of ModuleS
     | ConditionalS of ConditionalS
 
