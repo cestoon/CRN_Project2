@@ -1,6 +1,6 @@
 ﻿module Parser
 open FParsec
-open AST.CrnTypes
+open AST.CRNPP
 
 let ws = spaces
 let str_ws s = pstring s .>> ws
@@ -10,86 +10,114 @@ let normalChar = satisfy (fun c -> c <> ',' && c <> '\r' && c <> '\n' && c <> ' 
 
 let stringLiteral =  manyChars normalChar .>> ws
 
-let toLD =
+let toLd =
     // ld [’〈species〉‘,’〈species〉']
-    str_ws "ld" >>. str_ws "[" >>. stringLiteral .>> str_ws "," .>>. stringLiteral .>> str_ws "]" |>> CommandS.LD
+    str_ws "ld" >>. str_ws "[" >>. stringLiteral .>> str_ws "," .>>. stringLiteral .>> str_ws "]" |>> Ld
 
-let toADD =
+let toAdd =
     // ‘add [’〈species〉‘,’〈species〉‘,’〈species〉‘]
-    str_ws "add" >>. str_ws "[" >>. stringLiteral .>> str_ws "," .>>. stringLiteral .>> str_ws "," .>>. stringLiteral .>> str_ws "]" |>> CommandS.ADD
+    str_ws "add" >>. str_ws "[" >>. stringLiteral .>> str_ws "," .>>. stringLiteral .>> str_ws "," .>>. stringLiteral .>> str_ws "]"
+    |>> function
+    |(species1, species2), species3
+        -> Add(species1, species2, species3)
 
-let toSUB =
+let toSub =
     // sub [’〈species〉‘,’〈species〉‘,’〈species〉‘]
-    str_ws "sub" >>. str_ws "[" >>. stringLiteral .>> str_ws "," .>>. stringLiteral .>> str_ws "," .>>. stringLiteral .>> str_ws "]" |>> CommandS.SUB
+    str_ws "sub" >>. str_ws "[" >>. stringLiteral .>> str_ws "," .>>. stringLiteral .>> str_ws "," .>>. stringLiteral .>> str_ws "]"
+    |>> function
+    |(species1, species2), species3
+        -> Sub(species1, species2, species3)
 
-let toMUL =
+let toMul =
     // mul [’〈species〉‘,’〈species〉‘,’〈species〉‘]
-    str_ws "mul" >>. str_ws "[" >>. stringLiteral .>> str_ws "," .>>. stringLiteral .>> str_ws "," .>>. stringLiteral .>> str_ws "]" |>> CommandS.MUL
+    str_ws "mul" >>. str_ws "[" >>. stringLiteral .>> str_ws "," .>>. stringLiteral .>> str_ws "," .>>. stringLiteral .>> str_ws "]"
+    |>> function
+    |(species1, species2), species3
+        -> Mul(species1, species2, species3)
 
-let toDIV =
+let toDiv =
     // div [’〈species〉‘,’〈species〉‘,’〈species〉‘]
-    str_ws "div" >>. str_ws "[" >>. stringLiteral .>> str_ws "," .>>. stringLiteral .>> str_ws "," .>>. stringLiteral .>> str_ws "]" |>> CommandS.DIV
+    str_ws "div" >>. str_ws "[" >>. stringLiteral .>> str_ws "," .>>. stringLiteral .>> str_ws "," .>>. stringLiteral .>> str_ws "]"
+    |>> function
+    |(species1, species2), species3
+        -> Div(species1, species2, species3)
 
-let toSQRT =
+let toSqrt =
     // sqrt [’〈species〉‘,’〈species〉‘]
-    str_ws "sqrt" >>. str_ws "[" >>. stringLiteral .>> str_ws "," .>>. stringLiteral .>> str_ws "]" |>> CommandS.SQRT
+    str_ws "sqrt" >>. str_ws "[" >>. stringLiteral .>> str_ws "," .>>. stringLiteral .>> str_ws "]" |>> Sqrt
 
-let toCMP =
+let toCmp =
     // ‘cmp [’〈species〉‘,’〈species〉‘]
-    str_ws "cmp" >>. str_ws "[" >>. stringLiteral .>> str_ws "," .>>. stringLiteral .>> str_ws "]" |>> CommandS.CMP
+    str_ws "cmp" >>. str_ws "[" >>. stringLiteral .>> str_ws "," .>>. stringLiteral .>> str_ws "]" |>> Cmp
 
-let command, commandref = createParserForwardedToRef() // initially jvalueRef holds a reference to a dummy parser
+let composableCommand, (composableCommandRef: Parser<ComposableS,unit> ref) = createParserForwardedToRef()
+let anyCommand, (anyCommandRef: Parser<Command,unit> ref) = createParserForwardedToRef()
 
-let toifGT =
+let toIfGT =
     // ‘ifGT [’〈CommandSList〉‘]
-    str_ws "ifGT" >>. between (str_ws "[{") (str_ws "}]") (sepBy (command .>> ws) (str_ws ",")) |>> CommandS.IFGT
+    str_ws "ifGT" >>. between (str_ws "[{") (str_ws "}]") (sepBy (composableCommand .>> ws) (str_ws ",")) |>> IfGT
 
-let toifGE =
+let toIfGE =
     // ‘ifGE [’〈CommandSList〉‘]
-    str_ws "ifGE" >>. between (str_ws "[{") (str_ws "}]") (sepBy (command .>> ws) (str_ws ",")) |>> CommandS.IFGE
+    str_ws "ifGE" >>. between (str_ws "[{") (str_ws "}]") (sepBy (composableCommand .>> ws) (str_ws ",")) |>> IfGE
 
-let toifEQ =
+let toIfEQ =
     // ifEQ [’〈CommandSList〉‘]
-    str_ws "ifEQ" >>. between (str_ws "[{") (str_ws "}]") (sepBy (command .>> ws) (str_ws ",")) |>> CommandS.IFEQ
+    str_ws "ifEQ" >>. between (str_ws "[{") (str_ws "}]") (sepBy (composableCommand .>> ws) (str_ws ",")) |>> IfEQ
 
-let toifLT =
+let toIfLT =
     // ifLT [’〈CommandSList〉‘]
-    str_ws "ifLT" >>. between (str_ws "[{") (str_ws "}]") (sepBy (command .>> ws) (str_ws ",")) |>> CommandS.IFLT
+    str_ws "ifLT" >>. between (str_ws "[{") (str_ws "}]") (sepBy (composableCommand .>> ws) (str_ws ",")) |>> IfLT
 
-let toifLE =
+let toIfLE =
     // ifLT [’〈CommandSList〉‘]
-    str_ws "ifLE" >>. between (str_ws "[{") (str_ws "}]") (sepBy (command .>> ws) (str_ws ",")) |>> CommandS.IFLE
+    str_ws "ifLE" >>. between (str_ws "[{") (str_ws "}]") (sepBy (composableCommand .>> ws) (str_ws ",")) |>> IfLE
 
-do commandref := choice [
-                        toLD
-                        toADD
-                        toSUB
-                        toMUL
-                        toDIV
-                        toSQRT
-                        toCMP
-                        toifGT
-                        toifGE
-                        toifEQ
-                        toifLT
-                        toifLE
-                        ]
+do composableCommandRef := choice [
+    toLd
+    toAdd
+    toSub
+    toMul
+    toDiv
+    toSqrt
+]
+
+do anyCommandRef := choice [
+    toLd
+    toAdd
+    toSub
+    toMul
+    toDiv
+    toSqrt
+    toCmp
+    toIfGT
+    toIfGE
+    toIfEQ
+    toIfLT
+    toIfLE
+]
 
 let block, blockref = createParserForwardedToRef() // initially jvalueRef holds a reference to a dummy parser
 
-let toConcS =
+let toConc =
     // 〈ConcS 〉 ::= ‘conc[’〈species〉‘,’〈number 〉‘]
-    str_ws "conc" >>. str_ws "[" >>. stringLiteral .>> str_ws "," .>>. float_ws .>> str_ws "]" |>> RootS.Conc
+    str_ws "conc" >>. str_ws "[" >>. stringLiteral .>> str_ws "," .>>. float_ws .>> str_ws "]" |>> Conc
 
-let toStepS =
+let toConcS = 
+    sepBy toConc (str_ws ",") 
+    |>> function
+    |(conc1: Conc) :: (tail: Conc list)
+        -> ConcS(conc1, tail)
+
+let toStep =
     // 〈〈StepS 〉 ::= ‘step [’CommandSList‘]
     //〈CommandSList〉 ::= 〈CommandS 〉
     //| 〈CommandS 〉 ‘,’ 〈CommandSList〉
-    str_ws "step" >>.  between (str_ws "[{") (str_ws "}]") (sepBy (command .>> ws) (str_ws ",")) |>> RootS.Step
+    str_ws "step" >>.  between (str_ws "[{") (str_ws "}]") (sepBy (anyCommand .>> ws) (str_ws ",")) |>> Step
 
 do blockref := choice [
-                        toStepS
-                        toConcS
+                        toConc
+                        toStep
                         ]
 
 let toCrn =
@@ -103,4 +131,4 @@ let test p str =
     | Success(result, _, _)   -> printfn "Success: %A" result
     | Failure(errorMsg, _, _) -> printfn "Failure: %s" errorMsg
 
-test toConcS "conc[ABC,5]"
+test toConc "conc[ABC,5]"

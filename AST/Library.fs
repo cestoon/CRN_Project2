@@ -1,10 +1,7 @@
 ﻿namespace AST
 
+(*
 module CrnTypes =
-    let hello name =
-        printfn "Hello %s" name
-
-
     type species = string
 
     type Expr = species list
@@ -30,3 +27,40 @@ module CrnTypes =
     type RootS = Conc of ConcS | Step of CommandS list
 
     type Crn =  Roots of RootS list
+*)
+module CRNPP =
+    type Species = string
+    type Number = float
+
+    type NonComposableS = Cmp of Species * Species
+
+    type ComposableS
+        = Ld of Species * Species
+        | Add of Species * Species * Species
+        | Sub of Species * Species * Species
+        | Mul of Species * Species * Species
+        | Div of Species * Species * Species
+        | Sqrt of Species * Species
+    type ConditionalS
+        = IfGT of ComposableS list??????????????????????????
+        | IfGE of CommandList
+        | IfEQ of CommandList
+        | IfLT of CommandList
+        | IfLE of CommandList
+    and Command 
+        = Composable of ComposableS
+        | NonComposable of NonComposableS
+        | Conditional of ConditionalS
+    and CommandList = Command list //TODO?: decide if this should e implemented as (Command * Command list) to ensure minimum 1 element
+
+    type Step = Step of CommandList
+
+    type StepList = Step list //TODO?: decide if this should e implemented as (Step * Step list) to ensure minimum 1 element 
+
+    type Conc = Species * Number
+
+    type RootList 
+        = ConcS of Conc * RootList
+        | StepList of StepList 
+
+    type Crn = Crn of RootList
