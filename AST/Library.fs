@@ -37,3 +37,9 @@ module CRNPP =
     type RootListS = RootList of (Conc list * StepList)
 
     type Crn = Crn of RootListS
+
+module Rxn = 
+    type Expr = CRNPP.Species list
+    type Rxn = Rxn of Expr * Expr * CRNPP.Number
+    
+    let toRxn (rs, ps) = Rxn (rs, ps, 1)
