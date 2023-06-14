@@ -41,7 +41,7 @@ let pNonComposableS =
 let (pCommand, pCommandRef) = createParserForwardedToRef<Command, unit>()
 let (pCommandList, pCommandListRef) = createParserForwardedToRef<CommandList, unit>()
 let (pConditionalS, pConditionalSRef) = createParserForwardedToRef<ConditionalS, unit>()
-let (pRootList, pRootListRef) = createParserForwardedToRef<RootList, unit>()
+let (pRootList, pRootListRef) = createParserForwardedToRef<RootListS, unit>()
 
 let pStep =
     between (symbol "step[{") (symbol "}]")
@@ -59,15 +59,10 @@ do
     pCommandListRef := sepEndBy pCommand (symbol ",")
 
     let pConcList = sepEndBy pConc (symbol ",")
-    let pSteps = sepEndBy pStep (symbol ",")
+    let pSteps = sepEndBy1 pStep (symbol ",")
 
-    // pRootListRef :=
-    //     choice [
-    //         pConcList |>> fun concs -> List.foldBack (fun conc acc -> ConcS(conc, acc)) concs (StepList []);
-    //         pSteps |>> fun steps -> StepList steps
-    //     ]
     pRootListRef :=
-    (pipe2 pConcList (pSteps .>> spaces) (fun concs steps -> ConcSteps (concs, steps)))
+        pipe2 pConcList (pSteps .>> spaces) (fun concs steps -> RootList (concs, steps))
 
 
     let conditionalParser: Parser<ConditionalS, unit> =
