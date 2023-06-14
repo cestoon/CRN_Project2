@@ -1,5 +1,6 @@
 ﻿namespace State
 
-module Say =
-    let hello name =
-        printfn "Hello %s" name
+open AST.CRNPP
+
+module State =
+    type State = Conc list
