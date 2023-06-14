@@ -12,7 +12,7 @@ module CRNPP =
         | Sub of Species * Species * Species
         | Mul of Species * Species * Species
         | Div of Species * Species * Species
-        | Sqrt of Species * Species * Species
+        | Sqrt of Species * Species
     type ConditionalS
         = IfGT of CommandList
         | IfGE of CommandList
