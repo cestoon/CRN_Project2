@@ -1,33 +1,5 @@
 ﻿namespace AST
 
-(*
-module CrnTypes =
-    type species = string
-
-    type Expr = species list
-
-    type ConcS = species * float
-
-    type RxnS = Expr * Expr * float
-
-    type CommandS = 
-        | LD of species * species
-        | ADD of (species * species) * species
-        | SUB of (species * species) * species
-        | MUL of (species * species) * species
-        | DIV of (species * species) * species
-        | SQRT of species * species
-        | CMP of species * species
-        | IFGT of CommandS list
-        | IFGE of CommandS list
-        | IFEQ of CommandS list
-        | IFLT of CommandS list
-        | IFLE of CommandS list
-
-    type RootS = Conc of ConcS | Step of CommandS list
-
-    type Crn =  Roots of RootS list
-*)
 module CRNPP =
     type Species = string
     type Number = float
@@ -42,7 +14,7 @@ module CRNPP =
         | Div of Species * Species * Species
         | Sqrt of Species * Species
     type ConditionalS
-        = IfGT of ComposableS list??????????????????????????
+        = IfGT of CommandList
         | IfGE of CommandList
         | IfEQ of CommandList
         | IfLT of CommandList
@@ -59,8 +31,6 @@ module CRNPP =
 
     type Conc = Species * Number
 
-    type RootList 
-        = ConcS of Conc * RootList
-        | StepList of StepList 
+    type RootListS = RootList of (Conc list * Step list)
 
-    type Crn = Crn of RootList
+    type Crn = Crn of RootListS
