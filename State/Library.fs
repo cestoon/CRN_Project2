@@ -3,4 +3,4 @@
 open AST.CRNPP
 
 module State =
-    type State = Conc list
+    type State = Map<Species, Number>
