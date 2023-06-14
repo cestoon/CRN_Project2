@@ -5,6 +5,12 @@ open Parser;;
 
 open FParsec
 
+let parseTest s =
+    match parseString s with 
+    | Success (result, _, _) -> printfn $"crn : {result}"
+    | Failure (errorMsg, _, _) -> printfn "Parsing failed: %s" errorMsg
+ 
+
 let gcd = "crn={
     conc[b,32 ],
     conc[a,12 ],
@@ -49,4 +55,4 @@ let fac =  "crn={
  }]
 };"
 
-parseString gcd    
+parseTest gcd    
