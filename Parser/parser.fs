@@ -8,33 +8,35 @@ let symbol s = token (pstring s)
 
 let pSpecies = many1Satisfy (fun c -> isLetter c || isDigit c) |>> Species
 
-let pNumber = pfloat
+let pNumber = choice [
+        pfloat;
+        pint32 |>> fun n -> float n
+    ]
 
-let pConc =
-    pipe2
-        (pSpecies .>> symbol ",")
-        pNumber
-        (fun s n -> (s, n))
+let pConc: Parser<Conc, unit> = 
+    between (symbol "conc" .>>. symbol "[") (symbol "]") 
+        (pipe2 (pSpecies .>> (symbol "," .>> spaces)) pNumber (fun sp n -> (sp, n)))
+
+let pComposableS: Parser<ComposableS, unit> =
+    choice [
+        between (symbol "ld" .>>. symbol "[") (symbol "]") 
+            (pipe2 (pSpecies .>> (symbol "," .>> spaces)) pSpecies (fun sp1 sp2 -> Ld(sp1, sp2)));
+        between (symbol "add" .>>. symbol "[") (symbol "]")
+            (pipe3 pSpecies ((symbol "," .>> spaces) >>. pSpecies) ((symbol "," .>> spaces) >>. pSpecies) (fun s1 s2 s3 -> Add (s1, s2, s3)));
+        between (symbol "sub" .>>. symbol "[") (symbol "]")
+            (pipe3 pSpecies ((symbol "," .>> spaces) >>. pSpecies) ((symbol "," .>> spaces) >>. pSpecies) (fun s1 s2 s3 -> Sub (s1, s2, s3)));
+        between (symbol "mul" .>>. symbol "[") (symbol "]")
+            (pipe3 pSpecies ((symbol "," .>> spaces) >>. pSpecies) ((symbol "," .>> spaces) >>. pSpecies) (fun s1 s2 s3 -> Mul (s1, s2, s3)));
+        between (symbol "div" .>>. symbol "[") (symbol "]")
+            (pipe3 pSpecies ((symbol "," .>> spaces) >>. pSpecies) ((symbol "," .>> spaces) >>. pSpecies) (fun s1 s2 s3 -> Div (s1, s2, s3)));
+        between (symbol "sqrt" .>>. symbol "[") (symbol "]")
+            (pipe2 (pSpecies .>> (symbol "," .>> spaces)) pSpecies (fun s1 s2 -> Sqrt (s1, s2)));
+    ]
 
 let pNonComposableS =
-    between (symbol "cmp[") (symbol "]")
-        (pipe2 pSpecies (pSpecies .>> symbol ",") (fun s1 s2 -> Cmp (s1, s2)))
+    between (symbol "cmp" .>>. symbol "[") (symbol "]")
+        (pipe2 (pSpecies .>> (symbol "," .>> spaces)) pSpecies (fun s1 s2 -> Cmp (s1, s2)))
 
-let pComposableS: Parser<ComposableS, unit> = 
-    choice [
-        between (symbol "ld[") (symbol "]")
-            (pipe2 pSpecies (pSpecies .>> symbol ",") (fun s1 s2 -> Ld (s1, s2)));
-        between (symbol "add[") (symbol "]")
-            (pipe3 pSpecies (pSpecies .>> symbol ",") (pSpecies .>> symbol ",") (fun s1 s2 s3 -> Add (s1, s2, s3)));
-        between (symbol "sub[") (symbol "]")
-            (pipe3 pSpecies (pSpecies .>> symbol ",") (pSpecies .>> symbol ",") (fun s1 s2 s3 -> Sub (s1, s2, s3)));
-        between (symbol "mul[") (symbol "]")
-            (pipe3 pSpecies (pSpecies .>> symbol ",") (pSpecies .>> symbol ",") (fun s1 s2 s3 -> Mul (s1, s2, s3)));
-        between (symbol "div[") (symbol "]")
-            (pipe3 pSpecies (pSpecies .>> symbol ",") (pSpecies .>> symbol ",") (fun s1 s2 s3 -> Div (s1, s2, s3)));
-        between (symbol "sqrt[") (symbol "]")
-            (pipe3 pSpecies (pSpecies .>> symbol ",") (pSpecies .>> symbol ",") (fun s1 s2 s3 -> Sqrt (s1, s2, s3)));
-    ]
 
 let (pCommand, pCommandRef) = createParserForwardedToRef<Command, unit>()
 let (pCommandList, pCommandListRef) = createParserForwardedToRef<CommandList, unit>()
@@ -54,17 +56,21 @@ do
             pConditionalS |>> Conditional;
         ]
 
-    pCommandListRef := many1 pCommand
+    pCommandListRef := sepEndBy pCommand (symbol ",")
 
-    pRootListRef := 
-        choice [
-            pipe2 (between (symbol "conc[") (symbol "],") (pConc .>> spaces))
-                  pRootList
-                  (fun conc rootList -> ConcS (conc, rootList));
-            many1 pStep |>> StepList
-        ]
+    let pConcList = sepEndBy pConc (symbol ",")
+    let pSteps = sepEndBy pStep (symbol ",")
 
-    pConditionalSRef :=
+    // pRootListRef :=
+    //     choice [
+    //         pConcList |>> fun concs -> List.foldBack (fun conc acc -> ConcS(conc, acc)) concs (StepList []);
+    //         pSteps |>> fun steps -> StepList steps
+    //     ]
+    pRootListRef :=
+    (pipe2 pConcList (pSteps .>> spaces) (fun concs steps -> ConcSteps (concs, steps)))
+
+
+    let conditionalParser: Parser<ConditionalS, unit> =
         choice [
             between (symbol "ifGT[") (symbol "]") (between (symbol "{") (symbol "}") pCommandList |>> IfGT);
             between (symbol "ifGE[") (symbol "]") (between (symbol "{") (symbol "}") pCommandList |>> IfGE);
@@ -73,24 +79,10 @@ do
             between (symbol "ifLE[") (symbol "]") (between (symbol "{") (symbol "}") pCommandList |>> IfLE);
         ]
 
+    pConditionalSRef := conditionalParser
+
 let pCrn : Parser<Crn, unit> =
-    between (spaces >>. symbol "crn={") (symbol "};")
+    between (spaces >>. symbol "crn" .>>. spaces .>>. symbol "=" .>>. spaces .>>. symbol "{") (symbol "};")
         (pRootList |>> fun rl -> Crn rl)
 
 let parseString = run (pCrn  .>>  eof) 
-
-// let gcd = "crn = {
-//     conc[a,a0], 
-//     conc[b,b0], 
-//     step[{ 
-//         ld[a, atmp], 
-//         ld[b, btmp],
-//         cmp[a,b] 
-//     }], 
-//     step[{
-//         ifGT[{ sub[atmp,btmp,a] }],
-//         ifLT[{ sub[btmp,atmp,b] }] 
-//     }] 
-// };"
-
-// parseString gcd

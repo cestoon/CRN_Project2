@@ -2,8 +2,8 @@ module Program
 
 open FParsec
 
+// this is a practice file for FParsec
 let pfloat: Parser<float, unit> = pfloat
-
 
 let str s = pstring s
 let floatBetweenBrackets = str "[" >>. pfloat .>> str "]"
@@ -20,5 +20,3 @@ let test p str =
     match run p str with
     | Success(result, _, _)   -> printfn "Success: %A" result
     | Failure(errorMsg, _, _) -> printfn "Failure: %s" errorMsg
-
-// identifier
