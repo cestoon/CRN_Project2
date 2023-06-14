@@ -11,7 +11,7 @@ module Execute =
         | Sub(species1, species2, species3) -> state // TODO: Implement subtraction logic
         | Mul(species1, species2, species3) -> state // TODO: Implement multiplication logic
         | Div(species1, species2, species3) -> state // TODO: Implement division logic
-        | Sqrt(species1, species2, species3) -> state // TODO: Implement square root logic
+        | Sqrt(species1, species2) -> state // TODO: Implement square root logic
 
     let executeNonComposableCommand (state: State) (command: NonComposableS) =
         match command with
