@@ -31,8 +31,6 @@ module CRNPP =
 
     type Conc = Species * Number
 
-    type RootList 
-        = ConcS of Conc * RootList
-        | StepList of StepList 
+    type RootListS = RootList of (Conc list * Step list)
 
-    type Crn = Crn of RootList
+    type Crn = Crn of RootListS
