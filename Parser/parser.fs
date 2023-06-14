@@ -1,79 +1,96 @@
 module Parser
 
 open FParsec
-open System
+open AST.CRNPP
 
-// code example
-// 1 crn = {
-// 2 conc[a,a0],
-// 3 conc[b,b0],
-// 4 step [{
-// 5 ld[a, atmp], 6 ld[b, btmp], 7 cmp[a,b]
-// 8 }],
-// 9 step [{
-// 10 ifGT[{ sub[atmp,btmp,a] }], 11 ifLT[{ sub[btmp,atmp,b] }] 12 }]
-// 13 };
+let token p = p .>> spaces
+let symbol s = token (pstring s)
 
+let pSpecies = many1Satisfy (fun c -> isLetter c || isDigit c) |>> Species
 
-// ----------- todo ----------
-// speciesParser
-// numberParser
-// concParser
-// comparisonParser
-// addParser
-// subParser
-// mulParser
-// divParser
-// sqrtParser
-// loadParser
-// arithmeticParser
-// commandListParser
-//  geParser
-//  gtParser
-//  eqParser
-//  ltParser
-//  leParser
-//  commandParser
-//  conditionParser
-// commandParser
-// rootParser
-// rootListParser
+let pNumber = pfloat
 
-// For the lexical part
-// Handling terminal symbols: identifiers, integers, parantheses and '-'
-// skip blanks after a token
+let pConc =
+    pipe2
+        (pSpecies .>> symbol ",")
+        pNumber
+        (fun s n -> (s, n))
 
+let pNonComposableS =
+    between (symbol "cmp[") (symbol "]")
+        (pipe2 pSpecies (pSpecies .>> symbol ",") (fun s1 s2 -> Cmp (s1, s2)))
 
-// For the Grammer part
-
-// The above grammar is rewritten to an LL(1) grammar using techniques described in 
-// the notes by Sestoft and Friis Larsen, for example
-
-(*
-   T    -> V | C | ( E )
-   Eopt -> - T Eopt | epsilon 
-   E    -> T Eopt
-
-The definition of parser combinators follows this grammar closely
-*)
-
-let identifier: Parser<string, unit> = many1Satisfy2L isLetter isLetterOrDigit "identifier"
-
-let add: Parser<ArithmeticS, unit> =
-    between (pstring "add[") (pstring "]")
-        (sepBy identifier (pstring ","))
-        |>> Add
-
-let arithmetic: Parser<ArithmeticS, unit> =
+let pComposableS: Parser<ComposableS, unit> = 
     choice [
-        add
-        sub
-        mul
-        div
+        between (symbol "ld[") (symbol "]")
+            (pipe2 pSpecies (pSpecies .>> symbol ",") (fun s1 s2 -> Ld (s1, s2)));
+        between (symbol "add[") (symbol "]")
+            (pipe3 pSpecies (pSpecies .>> symbol ",") (pSpecies .>> symbol ",") (fun s1 s2 s3 -> Add (s1, s2, s3)));
+        between (symbol "sub[") (symbol "]")
+            (pipe3 pSpecies (pSpecies .>> symbol ",") (pSpecies .>> symbol ",") (fun s1 s2 s3 -> Sub (s1, s2, s3)));
+        between (symbol "mul[") (symbol "]")
+            (pipe3 pSpecies (pSpecies .>> symbol ",") (pSpecies .>> symbol ",") (fun s1 s2 s3 -> Mul (s1, s2, s3)));
+        between (symbol "div[") (symbol "]")
+            (pipe3 pSpecies (pSpecies .>> symbol ",") (pSpecies .>> symbol ",") (fun s1 s2 s3 -> Div (s1, s2, s3)));
+        between (symbol "sqrt[") (symbol "]")
+            (pipe3 pSpecies (pSpecies .>> symbol ",") (pSpecies .>> symbol ",") (fun s1 s2 s3 -> Sqrt (s1, s2, s3)));
     ]
 
-let ifGT: Parser<ConditionalS, unit> =
-    between (pstring "ifGT[{") (pstring "}]")
-        (sepBy commandS (pstring ","))
-        |>> IfGT
+let (pCommand, pCommandRef) = createParserForwardedToRef<Command, unit>()
+let (pCommandList, pCommandListRef) = createParserForwardedToRef<CommandList, unit>()
+let (pConditionalS, pConditionalSRef) = createParserForwardedToRef<ConditionalS, unit>()
+let (pRootList, pRootListRef) = createParserForwardedToRef<RootList, unit>()
 
+let pStep =
+    between (symbol "step[{") (symbol "}]")
+        (pCommandList)
+    |>> Step
+
+do
+    pCommandRef :=
+        choice [
+            pComposableS |>> Composable;
+            pNonComposableS |>> NonComposable;
+            pConditionalS |>> Conditional;
+        ]
+
+    pCommandListRef := many1 pCommand
+
+    pRootListRef := 
+        choice [
+            pipe2 (between (symbol "conc[") (symbol "],") (pConc .>> spaces))
+                  pRootList
+                  (fun conc rootList -> ConcS (conc, rootList));
+            many1 pStep |>> StepList
+        ]
+
+    pConditionalSRef :=
+        choice [
+            between (symbol "ifGT[") (symbol "]") (between (symbol "{") (symbol "}") pCommandList |>> IfGT);
+            between (symbol "ifGE[") (symbol "]") (between (symbol "{") (symbol "}") pCommandList |>> IfGE);
+            between (symbol "ifEQ[") (symbol "]") (between (symbol "{") (symbol "}") pCommandList |>> IfEQ);
+            between (symbol "ifLT[") (symbol "]") (between (symbol "{") (symbol "}") pCommandList |>> IfLT);
+            between (symbol "ifLE[") (symbol "]") (between (symbol "{") (symbol "}") pCommandList |>> IfLE);
+        ]
+
+let pCrn : Parser<Crn, unit> =
+    between (spaces >>. symbol "crn={") (symbol "};")
+        (pRootList |>> fun rl -> Crn rl)
+
+let parseString = run (pCrn  .>>  eof) 
+
+let gcd = "crn = {
+    conc[a,a0], 
+    conc[b,b0], 
+    step[{ 
+        ld[a, atmp], 
+        ld[b, btmp],
+        cmp[a,b] 
+    }], 
+    step[{
+        ifGT[{ sub[atmp,btmp,a] }],
+        ifLT[{ sub[btmp,atmp,b] }] 
+    }] 
+};"
+
+parseString gcd
