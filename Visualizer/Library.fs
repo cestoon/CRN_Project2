@@ -7,7 +7,7 @@ open Plotly.NET.TraceObjects
 open Plotly.NET.LayoutObjects
 
 module Visualizer =
-    let plotSpeciesStates (states: seq<State>) (speciesList: Species list) =
+    let plotSpeciesStates (states: seq<State>) (speciesList: Species list) (xAxisMaxRange) =
         let getXValues (states: seq<State>) = states |> Seq.mapi (fun i _ -> i) // Generate x-axis values (state numbers)
 
         let getYValues (states: seq<State>) (species: Species) =
@@ -25,5 +25,5 @@ module Visualizer =
                 |> Chart.withLineStyle (Shape = StyleParam.Shape.Hv))
 
         Chart.combine (traces)
-        |> Chart.withXAxis (LinearAxis.init (Range = StyleParam.Range.ofMinMax (0, 10)))
+        |> Chart.withXAxis (LinearAxis.init (Range = StyleParam.Range.ofMinMax (0, xAxisMaxRange)))
         |> Chart.show
