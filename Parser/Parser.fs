@@ -61,8 +61,12 @@ do
     let pConcList = sepEndBy pConc (symbol ",")
     let pSteps = sepEndBy1 pStep (symbol ",")
 
+    // steps can be empty
     pRootListRef :=
-        pipe2 pConcList (pSteps .>> spaces) (fun concs steps -> RootList (concs, steps))
+        pipe2 pConcList (opt (pSteps .>> spaces)) (fun concs steps -> match steps with
+                                                                    | Some s -> RootList (concs, s)
+                                                                    | None -> RootList (concs, []))
+
 
 
     let conditionalParser: Parser<ConditionalS, unit> =
