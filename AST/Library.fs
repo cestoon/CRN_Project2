@@ -41,5 +41,25 @@ module CRNPP =
 module Rxn = 
     type Expr = CRNPP.Species list
     type Rxn = Rxn of Expr * Expr * CRNPP.Number
-    
-    let toRxn (rs, ps) = Rxn (rs, ps, 1)
+
+    let inline makeRxn rs ps k = Rxn (rs, ps, k)
+    let inline (=>) rs ps = Rxn(rs, ps, 1)
+    let inline (=|) rs k = fun ps -> Rxn(rs, ps, k)
+    let inline (|=>) f ps = f ps
+
+    let addCatalysers cs (Rxn(rs, ps, k)) = Rxn(cs@rs, cs@ps, k)
+    let addCatalyser c (Rxn(rs, ps, k)) = Rxn(c::rs, c::ps, k)
+
+    let private exprToRxnString (expr: Expr) = 
+        let strs = 
+            expr
+            |> List.map string
+        if strs.IsEmpty 
+        then "Ø"
+        else strs |> List.reduce (fun a b -> $"{a} + {b}") 
+
+    let prettyString (Rxn (rs, ps, k)) = 
+            let rsString = exprToRxnString rs
+            let psString = exprToRxnString ps
+            let arrow = if k.Equals(1.) then "--->" else $"-{k}->"
+            $"{rsString} {arrow} {psString}"
