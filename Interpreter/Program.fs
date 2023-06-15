@@ -36,6 +36,10 @@ module Execute =
 
             state |> Map.add "XgtY" xMapping |> Map.add "XltY" yMapping
 
+    let (.=) a b = a.Equals(b)
+    let (.<=) a b = a < b || a .= b
+    let (.>=) a b = a > b || a .= b
+
     let rec executeConditionalCommand (state: State) (command: ConditionalS) =
         let XgtYValue = state["XgtY"]
         let XltYValue = state["XltY"]
@@ -48,10 +52,10 @@ module Execute =
 
         match command with
         | IfGT commandList -> conditionalExec (>) commandList
-        | IfGE commandList -> conditionalExec (>=) commandList
-        | IfEQ commandList -> conditionalExec (=) commandList
+        | IfGE commandList -> conditionalExec (.>=) commandList
+        | IfEQ commandList -> conditionalExec (.=) commandList
         | IfLT commandList -> conditionalExec (<) commandList
-        | IfLE commandList -> conditionalExec (<=) commandList
+        | IfLE commandList -> conditionalExec (.<=) commandList
 
     and executeCommand (state: State) (command: Command) =
         match command with
