@@ -11,10 +11,14 @@
 
   <ItemGroup>
     <ProjectReference Include="..\State\State.fsproj" />
+    <ProjectReference Include="..\Interpreter\Interpreter.fsproj" />
+    <ProjectReference Include="..\AST\AST.fsproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Plotly.NET" Version="4.0.0" />
+    <PackageReference Include="Deedle" Version="3.0.0" />
+    <PackageReference Include="FSharp.Data" Version="4.2.4" />
   </ItemGroup>
 
 </Project>
