@@ -27,17 +27,6 @@ module Execute =
             let newSpeciesValue = sqrt state[species1]
             state.Add(species2, newSpeciesValue)
 
-    // let executeNonComposableCommand (state: State) (command: NonComposableS) =
-    //     match command with
-    //     | Cmp(species1, species2) ->
-    //         let ge, lt =
-    //             if state[species1] >= state[species2] then
-    //                 state[species1], state[species2]
-    //             else
-    //                 state[species2], state[species1]
-
-    //         state |> Map.add "XgtY" ge |> Map.add "XltY" lt
-
     let executeNonComposableCommand (state: State) (command: NonComposableS) =
         match command with
         | Cmp(species1, species2) ->
@@ -50,9 +39,6 @@ module Execute =
     let rec executeConditionalCommand (state: State) (command: ConditionalS) =
         let XgtYValue = state["XgtY"]
         let XltYValue = state["XltY"]
-
-        printfn "valueOf XgtYValue: %A" XgtYValue
-        printfn "valueOf XltYValue: %A" XltYValue
 
         let conditionalExec b cs =
             if b XgtYValue XltYValue then
@@ -69,19 +55,13 @@ module Execute =
 
     and executeCommand (state: State) (command: Command) =
         match command with
-        | Composable composableCommand ->
-            printfn "Execute Composable"
-            executeComposableCommand state composableCommand
-        | NonComposable nonComposableCommand ->
-            printfn "Execute NonComposable"
-            executeNonComposableCommand state nonComposableCommand
+        | Composable composableCommand -> executeComposableCommand state composableCommand
+        | NonComposable nonComposableCommand -> executeNonComposableCommand state nonComposableCommand
         | Conditional conditionalCommand ->
-            printfn "Execute conditional"
+
             executeConditionalCommand state conditionalCommand
 
     and executeCommands state' commands =
-        printfn "Execute Commands"
-
         match commands with
         | [] -> state'
         | command :: remainingCommands ->
@@ -90,15 +70,10 @@ module Execute =
 
     let executeStep (state: State) (step: Step) =
         match step with
-        | Step commandList ->
-            printfn "Execute Step"
-            executeCommands state commandList
+        | Step commandList -> executeCommands state commandList
 
     let executeStepList (state: State) (stepList: StepList) =
         let rec executeSteps (state': State) steps =
-            printfn "Execute StepList %A " stepList.Length
-            printfn "StepList %A " stepList
-
             match steps with
             | [] -> Seq.empty
             | step :: remainingSteps ->
@@ -113,31 +88,6 @@ module Execute =
 
     let executeConc (state: State) (conc: Conc) : State = state.Add(conc)
 
-
-    // let executeConcList (state: State) (concList: Conc list) =
-    //     let rec executeConcs (state': State) concs =
-    //         match concs with
-    //         | [] -> Seq.empty
-    //         | conc :: remainingConcs ->
-    //             let nextState = executeConc state' conc
-
-    //             seq {
-    //                 yield nextState
-    //                 yield! executeConcs nextState remainingConcs
-    //             }
-
-    //     executeConcs state concList
-
-
-    // let executeConcs (state: State) (concList: Conc list) =
-    //     let rec executeConcs state' concs =
-    //         match concs with
-    //         | [] -> state'
-    //         | conc :: remainingConcs ->
-    //             let nextState = executeConc state' conc
-    //             executeConcs nextState remainingConcs
-
-    //     executeConcs state concList
     let rec executeMainLoop state stepList =
         seq {
             let states = executeStepList state stepList
@@ -150,15 +100,6 @@ module Execute =
         | RootList(concList, stepList) ->
             let initialConcState = List.fold executeConc state concList
             executeMainLoop initialConcState stepList
-    // let nextState = executeStepList initialConcState stepList
-
-    // seq {
-    //     for state in nextState do
-    //         yield state
-
-    //     yield! executeStepList (Seq.last nextState) stepList
-    // }
-
 
     let rec executeCRN (state: State) (crn: Crn) =
         match crn with
