@@ -11,6 +11,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\State\State.fsproj" />
+    <ProjectReference Include="..\Interpreter\Interpreter.fsproj" />
+    <ProjectReference Include="..\AST\AST.fsproj" />
   </ItemGroup>
 
   <ItemGroup>

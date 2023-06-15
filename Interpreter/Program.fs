@@ -95,7 +95,7 @@ module Execute =
             yield! executeMainLoop (Seq.last states) stepList
         }
 
-    let rec executeRootList (state: State) (rootList: RootListS) : seq<State> =
+    let executeRootList (state: State) (rootList: RootListS) : seq<State> =
         match rootList with
         | RootList(concList, stepList) ->
             let initialConcState = List.fold executeConc state concList
