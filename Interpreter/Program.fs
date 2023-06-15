@@ -60,13 +60,6 @@ module Execute =
             else
                 state
 
-        let conditionalExecEq b cs =
-            if b XgtYValue XltYValue then
-                printf "\n\n\n       !!!!!EQ!!!!!!!\n\n\n"
-                executeCommands state cs
-            else
-                state
-
         match command with
         | IfGT commandList -> conditionalExec (>) commandList
         | IfGE commandList -> conditionalExec (>=) commandList
@@ -118,21 +111,54 @@ module Execute =
 
         executeSteps state stepList
 
-    let executeConc (state: State) (conc: Conc) = state.Add(conc)
+    let executeConc (state: State) (conc: Conc) : State = state.Add(conc)
 
-    let rec executeRootList (state: State) (rootList: RootList) : seq<State> =
+
+    // let executeConcList (state: State) (concList: Conc list) =
+    //     let rec executeConcs (state': State) concs =
+    //         match concs with
+    //         | [] -> Seq.empty
+    //         | conc :: remainingConcs ->
+    //             let nextState = executeConc state' conc
+
+    //             seq {
+    //                 yield nextState
+    //                 yield! executeConcs nextState remainingConcs
+    //             }
+
+    //     executeConcs state concList
+
+
+    // let executeConcs (state: State) (concList: Conc list) =
+    //     let rec executeConcs state' concs =
+    //         match concs with
+    //         | [] -> state'
+    //         | conc :: remainingConcs ->
+    //             let nextState = executeConc state' conc
+    //             executeConcs nextState remainingConcs
+
+    //     executeConcs state concList
+    let rec executeMainLoop state stepList =
+        seq {
+            let states = executeStepList state stepList
+            yield! states
+            yield! executeMainLoop (Seq.last states) stepList
+        }
+
+    let rec executeRootList (state: State) (rootList: RootListS) : seq<State> =
         match rootList with
-        | ConcS(conc, next) ->
-            let newState = executeConc state conc
-            executeRootList newState next
+        | RootList(concList, stepList) ->
+            let initialConcState = List.fold executeConc state concList
+            executeMainLoop initialConcState stepList
+    // let nextState = executeStepList initialConcState stepList
 
-        | StepList stepList ->
-            let nextState = executeStepList state stepList
+    // seq {
+    //     for state in nextState do
+    //         yield state
 
-            seq {
-                yield! nextState
-                yield! executeRootList (Seq.last nextState) rootList
-            }
+    //     yield! executeStepList (Seq.last nextState) stepList
+    // }
+
 
     let rec executeCRN (state: State) (crn: Crn) =
         match crn with
