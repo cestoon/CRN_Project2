@@ -63,9 +63,10 @@ do
 
     // steps can be empty
     pRootListRef :=
-        pipe2 pConcList (opt (pSteps .>> spaces)) (fun concs steps -> match steps with
-                                                                    | Some s -> RootList (concs, s)
-                                                                    | None -> RootList (concs, []))
+        pipe2 pConcList (opt (pSteps .>> spaces)) (fun concs steps -> 
+            match steps with
+            | Some s -> RootList (concs, s)
+            | None -> RootList (concs, []))
 
 
 

@@ -14,7 +14,7 @@ module TypeChecker =
         | Mul (species1, species2, species3) -> [species1; species2], species3
         | Div (species1, species2, species3) -> [species1; species2], species3
         | Sqrt (species1, species2) -> [species1], species2
-   
+
     let rec checkCommandList (commands: CommandList) (declaredSpecies: Species list) (isError:bool) (outputs: Species list) (hasCmp: bool) (hasConditional: bool) =
         //There must be no cyclical dependencies within a step
         //A species cannot be the result of more than one module per step
