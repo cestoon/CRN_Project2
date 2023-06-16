@@ -1,5 +1,7 @@
 open FParsec
+open AST.CrnTypes
 open Parser
+open TypeChecker.TypeChecker
 
 [<EntryPoint>]
 let main _ =
@@ -15,5 +17,12 @@ let main _ =
                     ifGT[{ sub[atmp,btmp,a] }],
                     ifLT[{ sub[btmp,atmp,b] }]
                 }]
-            }" |> printfn "%O"
+            }"
+
+    let aCrn = Roots ([Conc ("a", 8.0); Conc ("b", 88.0);
+        Step [LD ("a", "atmp"); LD ("b", "btmp"); CMP ("a", "b")];
+        Step [IFGT [SUB (("atmp", "btmp"), "a")]; IFLT [SUB (("btmp", "atmp"), "b")]]])
+    printfn "%A" aCrn
+    checkCrnType aCrn |>ignore
+
     0

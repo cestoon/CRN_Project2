@@ -26,6 +26,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Parser\Parser.fsproj" />
     <ProjectReference Include="..\AST\AST.fsproj" />
+    <ProjectReference Include="..\TypeChecker\TypeChecker.fsproj" />
   </ItemGroup>
 
 </Project>
