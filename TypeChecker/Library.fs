@@ -19,7 +19,7 @@ module TypeChecker =
         //There must be no cyclical dependencies within a step
         //A species cannot be the result of more than one module per step
         match commands with
-        |[] -> declaredSpecies, outputs, hasCmp, hasConditional
+        |[] -> declaredSpecies, isError, outputs, hasCmp, hasConditional
         |command::tail ->
             match command with
             |Composable composable ->
@@ -29,48 +29,48 @@ module TypeChecker =
                 if isCyclicalDependency then printfn "cyclical dependency"
                 let isConflictOutput = List.contains output outputs
                 if isConflictOutput then printfn "found result species conflict"
-                checkCommandList tail (output::declaredSpecies) (output::outputs) hasCmp hasConditional
+                checkCommandList tail (output::declaredSpecies) (isError || isConflictOutput || isConflictOutput) (output::outputs) hasCmp hasConditional
 
             |NonComposable (Cmp(species1, species2))->
                 let inputs = [species1; species2]
                 //declaredSpecies should include inputs, otherwise there is cyclical dependency
                 let isCyclicalDependency = (Set.ofList inputs) <> (Set.intersect (Set.ofList inputs) (Set.ofList declaredSpecies))
                 if isCyclicalDependency then printfn "found cyclical dependency"
-                checkCommandList tail declaredSpecies outputs true hasConditional
+                checkCommandList tail declaredSpecies (isError || isCyclicalDependency) outputs true hasConditional
 
             |Conditional conditional ->
                 match conditional with
                 |IfGT commands ->
-                    let declaredSpecies, outputs, hasCmp, _ =
-                        checkCommandList commands declaredSpecies outputs hasCmp hasConditional
-                    checkCommandList tail declaredSpecies outputs hasCmp true
+                    let declaredSpecies,isError, outputs, hasCmp, _ =
+                        checkCommandList commands declaredSpecies isError outputs hasCmp hasConditional
+                    checkCommandList tail declaredSpecies isError outputs hasCmp true
                 |IfGE commands ->
-                    let declaredSpecies, outputs, hasCmp, _ =
-                        checkCommandList commands declaredSpecies outputs hasCmp hasConditional
-                    checkCommandList tail declaredSpecies outputs hasCmp true
+                    let declaredSpecies, isError, outputs, hasCmp, _ =
+                        checkCommandList commands declaredSpecies isError outputs hasCmp hasConditional
+                    checkCommandList tail declaredSpecies isError outputs hasCmp true
                 |IfEQ commands ->
-                    let declaredSpecies, outputs, hasCmp, _ =
-                        checkCommandList commands declaredSpecies outputs hasCmp hasConditional
-                    checkCommandList tail declaredSpecies outputs hasCmp true
+                    let declaredSpecies, isError, outputs, hasCmp, _ =
+                        checkCommandList commands declaredSpecies isError outputs hasCmp hasConditional
+                    checkCommandList tail declaredSpecies isError outputs hasCmp true
                 |IfLT commands ->
-                    let declaredSpecies, outputs, hasCmp, _ =
-                        checkCommandList commands declaredSpecies outputs hasCmp hasConditional
-                    checkCommandList tail declaredSpecies outputs hasCmp true
+                    let declaredSpecies, isError, outputs, hasCmp, _ =
+                        checkCommandList commands declaredSpecies isError outputs hasCmp hasConditional
+                    checkCommandList tail declaredSpecies isError outputs hasCmp true
                 |IfLE commands ->
-                    let declaredSpecies, outputs, hasCmp, _ =
-                        checkCommandList commands declaredSpecies outputs hasCmp hasConditional
-                    checkCommandList tail declaredSpecies outputs hasCmp true
+                    let declaredSpecies, isError, outputs, hasCmp, _ =
+                        checkCommandList commands declaredSpecies isError outputs hasCmp hasConditional
+                    checkCommandList tail declaredSpecies isError outputs hasCmp true
 
     let rec checkSteps (steps: StepList) (declaredSpecies: Species list) (isError:bool) (prevHasCmp: bool): bool =
     //Conditional must not be in the same step with a comparison
     //Conditional must be only in steps after comparison
         match steps with
-        |[] -> true
+        |[] -> isError
         |step::tail ->
             match step with
             |Step([]) -> checkSteps tail declaredSpecies isError false
             |Step(commands) ->
-                let declaredSpecies, outputs,hasCmp, hasConditional = 
+                let declaredSpecies, isError, _, hasCmp, hasConditional = 
                     checkCommandList commands declaredSpecies isError [] false false
                 match prevHasCmp, hasCmp, hasConditional with
                 |_, true, true ->
@@ -81,7 +81,6 @@ module TypeChecker =
                     checkSteps tail declaredSpecies true hasCmp
                 |_, _, _ ->
                     checkSteps tail declaredSpecies isError hasCmp
-
 
     let checkCrn (crn: Crn): bool =
         match crn with
