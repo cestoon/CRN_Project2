@@ -7,7 +7,7 @@
     <Compile Include="Environment.fs" />
     <Compile Include="Compiler.fsi" />
     <Compile Include="Compiler.fs" />
-    <Compile Include="CrnCommads.fsi" />
+    <Compile Include="CrnCommands.fsi" />
     <Compile Include="CrnCommands.fs" />
     <Compile Include="CrnRoot.fs" />
     <Compile Include="Library.fs" />

@@ -90,7 +90,7 @@ module Execute =
 
         executeSteps state stepList
 
-    let executeConc (state: State) (conc: Conc) : State = state.Add(conc)
+    let executeConc (state: State) (Conc(species, amount)) : State = state.Add(species, amount)
 
     let rec executeMainLoop state stepList =
         seq {
@@ -99,9 +99,7 @@ module Execute =
             yield! executeMainLoop (Seq.last states) stepList
         }
 
-    let executeRootList (state: State) (rootList: RootListS) : seq<State> =
-        match rootList with
-        | RootList(concList, stepList) ->
+    let executeRootList (state: State) ((concList, stepList): RootList) : seq<State> =
             let initialConcState = List.fold executeConc state concList
             executeMainLoop initialConcState stepList
 

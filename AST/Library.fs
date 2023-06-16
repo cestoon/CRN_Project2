@@ -32,11 +32,11 @@ module CRNPP =
 
     type StepList = Step list //TODO?: decide if this should e implemented as (Step * Step list) to ensure minimum 1 element
 
-    type Conc = Species * Number
+    type Conc = Conc of Species * Number
 
-    type RootListS = RootList of (Conc list * StepList)
+    type RootList = (Conc list * StepList)
 
-    type Crn = Crn of RootListS
+    type Crn = Crn of RootList
 
 module Rxn = 
     type Expr = CRNPP.Species list
