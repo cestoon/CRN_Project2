@@ -6,7 +6,7 @@ open AST.Rxn
 open Compiler.Environment
 
 module CrnRoot =
-    let addConc env (spec, _) = { env with species = Set.add spec env.species }
+    let addConc env (Conc(spec, _)) = { env with species = Set.add spec env.species }
     let addConcList env concs = concs |> List.fold (addConc) env
 
     let compileStep env (Step(cs)) = 
@@ -18,7 +18,7 @@ module CrnRoot =
         steps 
         |> RxnNetwork.compileMany (compileStep) env 
 
-    let compileRootList env (RootList(concs, steps)) = 
+    let compileRootList env (concs, steps) = 
         env
         |> (fun e -> addConcList e concs)
         |> (fun e -> compileStepList e steps)

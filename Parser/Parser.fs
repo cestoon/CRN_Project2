@@ -15,7 +15,7 @@ let pNumber = choice [
 
 let pConc: Parser<Conc, unit> = 
     between (symbol "conc" .>>. symbol "[") (symbol "]") 
-        (pipe2 (pSpecies .>> (symbol "," .>> spaces)) pNumber (fun sp n -> (sp, n)))
+        (pipe2 (pSpecies .>> (symbol "," .>> spaces)) pNumber (fun sp n -> Conc(sp, n)))
 
 let pComposableS: Parser<ComposableS, unit> =
     choice [
@@ -41,7 +41,7 @@ let pNonComposableS =
 let (pCommand, pCommandRef) = createParserForwardedToRef<Command, unit>()
 let (pCommandList, pCommandListRef) = createParserForwardedToRef<CommandList, unit>()
 let (pConditionalS, pConditionalSRef) = createParserForwardedToRef<ConditionalS, unit>()
-let (pRootList, pRootListRef) = createParserForwardedToRef<RootListS, unit>()
+let (pRootList, pRootListRef) = createParserForwardedToRef<RootList, unit>()
 
 let pStep =
     between (symbol "step[{") (symbol "}]")
