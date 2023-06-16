@@ -7,7 +7,24 @@ open Plotly.NET.TraceObjects
 open Plotly.NET.LayoutObjects
 
 module Visualizer =
-    let plotSpeciesStates (states: seq<State>) (speciesList: Species list) (xAxisMaxRange) =
+
+    let getLineShape line =
+        match line with
+        | "Hv" -> StyleParam.Shape.Hv
+        | "Hvh" -> StyleParam.Shape.Hvh
+        | "Vh" -> StyleParam.Shape.Vh
+        | "Vhv" -> StyleParam.Shape.Vhv
+        | "Spline" -> StyleParam.Shape.Spline
+        | "Linear" -> StyleParam.Shape.Linear
+        | _ -> failwith "No such style param"
+
+
+    let plotSpeciesStates
+        (states: seq<State>)
+        (speciesList: Species list)
+        (xAxisMaxRange)
+        (lineShape: StyleParam.Shape)
+        =
         let getXValues (states: seq<State>) = states |> Seq.mapi (fun i _ -> i) // Generate x-axis values (state numbers)
 
         let getYValues (states: seq<State>) (species: Species) =
@@ -21,8 +38,8 @@ module Visualizer =
         let traces =
             speciesList
             |> List.map (fun species ->
-                Chart.Line(x = getXValues states, y = getYValues states species)
-                |> Chart.withLineStyle (Shape = StyleParam.Shape.Hv))
+                Chart.Line(x = getXValues states, y = getYValues states species, Name = species)
+                |> Chart.withLineStyle (Shape = lineShape))
 
         Chart.combine (traces)
         |> Chart.withXAxis (LinearAxis.init (Range = StyleParam.Range.ofMinMax (0, xAxisMaxRange)))
