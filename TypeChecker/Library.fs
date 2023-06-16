@@ -82,8 +82,11 @@ module TypeChecker =
                 |_, _, _ ->
                     checkSteps tail declaredSpecies isError hasCmp
 
+    let checkConc (Conc(species, _)) =
+        species
+
     let checkCrn (crn: Crn): bool =
         match crn with
-        |Crn(RootList(concs, steps)) ->
-            let declaredSpecies, _ = List.unzip concs
+        |Crn(concs, steps) ->
+            let declaredSpecies = List.map checkConc concs
             checkSteps steps declaredSpecies false false
