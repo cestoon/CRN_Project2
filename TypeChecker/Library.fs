@@ -24,12 +24,15 @@ module TypeChecker =
             match command with
             |Composable composable ->
                 let inputs, output = checkComposable composable
-                //declaredSpecies should include inputs, otherwise there is cyclical dependency
-                let isCyclicalDependency = (Set.ofList inputs) <> (Set.intersect (Set.ofList inputs) (Set.ofList declaredSpecies))
+                //declaredSpecies should include inputs, otherwise there is unknwon species
+                let isUnknownSpecies = (Set.ofList inputs) <> (Set.intersect (Set.ofList inputs) (Set.ofList declaredSpecies))
+                if isUnknownSpecies then printfn "unknwon species"
+                let isCyclicalDependency = List.contains output inputs
                 if isCyclicalDependency then printfn "cyclical dependency"
                 let isConflictOutput = List.contains output outputs
                 if isConflictOutput then printfn "found result species conflict"
-                checkCommandList tail (output::declaredSpecies) (isError || isConflictOutput || isConflictOutput) (output::outputs) hasCmp hasConditional
+                let isError = isError || isUnknownSpecies || isCyclicalDependency || isConflictOutput
+                checkCommandList tail (output::declaredSpecies) isError (output::outputs) hasCmp hasConditional
 
             |NonComposable (Cmp(species1, species2))->
                 let inputs = [species1; species2]
@@ -89,4 +92,4 @@ module TypeChecker =
         match crn with
         |Crn(concs, steps) ->
             let declaredSpecies = List.map checkConc concs
-            checkSteps steps declaredSpecies false false
+            checkSteps steps declaredSpecies false false |> not
