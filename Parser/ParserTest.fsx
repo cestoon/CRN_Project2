@@ -2,7 +2,7 @@
 #load "../AST/Library.fs";;
 #load "Parser.fs";;
 
-open Parser;;
+open Parser.CrnParser;;
 open FParsec
 
 let parseTest s =
@@ -157,3 +157,17 @@ parseTest IntegerSquareRoot
 parseTest ApproxEulerNum
 parseTest approPi
 parseTest subtract
+
+
+// parser test
+let test1 = "rxn[A+B, A+B+C, 1.0]"
+let test2 = "rxn[A, a, 1.0]"
+let test3: string = test1 + "," + test1
+
+let RxnParseTest parseRxn s =
+    match parseRxn s with
+    | Success (rxn, _, _) -> printfn "解析成功: %A" rxn
+    | Failure (errMsg, _, _) -> printfn "解析失败: %s" errMsg
+
+// 调用 parseTest 函数，使用 RxnParser 模块中的解析器和测试输入。
+RxnParseTest parseString test3

@@ -2,8 +2,8 @@ module ParserTests
 
 open NUnit.Framework
 open FParsec
-open Parser
-open AST.CRNPP
+open Parser.CrnParser
+open AST
 open FsCheck
 open FsCheck.NUnit
 
