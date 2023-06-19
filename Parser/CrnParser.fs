@@ -1,4 +1,4 @@
-namespace Parser
+namespace CrnParser
 
 open FParsec
 open AST
@@ -87,26 +87,4 @@ module CrnParser =
         between (spaces >>. symbol "crn" .>>. spaces .>>. symbol "=" .>>. spaces .>>. symbol "{") (symbol "};")
             (pRootList |>> fun rl -> Crn rl)
 
-    let parseString = run (pCrn  .>>  eof) 
-module RxnParser =
-    let token p = p .>> spaces
-    let symbol s = token (pstring s)
-
-    let pSpecies = many1Satisfy (fun c -> isLetter c || isDigit c) |>> Species
-
-    let pExpr: Parser<Expr, unit> =
-        sepBy1 pSpecies (symbol "+")
-
-    let pNumber = choice [
-            pfloat;
-            pint32 |>> fun n -> float n
-        ]
-
-    let pRxn: Parser<Rxn, unit> =
-        between (symbol "rxn" .>>. symbol "[") (symbol "]")
-            (pipe3 pExpr ((symbol "," .>> spaces) >>. pExpr) ((symbol "," .>> spaces) >>. pNumber) (fun rs ps k -> Rxn (rs, ps, k)))
-
-    let pCrn: Parser<Rxn list, unit> =
-        sepBy1 pRxn (symbol ",")
-        
-    let parseString = run (pCrn .>> eof)
+    let parseCrnString = run (pCrn  .>>  eof) 
