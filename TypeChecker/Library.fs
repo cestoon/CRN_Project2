@@ -88,8 +88,14 @@ module TypeChecker =
     let checkConc (Conc(species, _)) =
         species
 
+    let containsDuplicates inputList =
+        let distinctList = Seq.distinct inputList |> List.ofSeq
+        List.length distinctList < List.length inputList
+
     let checkCrn (crn: Crn): bool =
         match crn with
         |Crn(concs, steps) ->
             let declaredSpecies = List.map checkConc concs
-            checkSteps steps declaredSpecies false false |> not
+            let isError = containsDuplicates declaredSpecies
+            if isError then printfn "found duplicate species"
+            checkSteps steps declaredSpecies isError false |> not
