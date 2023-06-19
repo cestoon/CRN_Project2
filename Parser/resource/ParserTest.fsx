@@ -1,12 +1,13 @@
 #r "nuget:FParsec";;
-#load "../AST/Library.fs";;
-#load "Parser.fs";;
+#load "../../AST/Library.fs";;
+#load "../CrnParser.fs";;
+#load "../RxnParser.fs";;
 
-open Parser.CrnParser;;
+open CrnParser.CrnParser;;
 open FParsec
 
 let parseTest s =
-    match parseString s with 
+    match parseCrnString s with 
     | Success (result, _, _) -> printfn $"crn : {result}"
     | Failure (errorMsg, _, _) -> printfn "Parsing failed: %s" errorMsg
  
@@ -157,17 +158,3 @@ parseTest IntegerSquareRoot
 parseTest ApproxEulerNum
 parseTest approPi
 parseTest subtract
-
-
-// parser test
-let test1 = "rxn[A+B, A+B+C, 1.0]"
-let test2 = "rxn[A, a, 1.0]"
-let test3: string = test1 + "," + test1
-
-let RxnParseTest parseRxn s =
-    match parseRxn s with
-    | Success (rxn, _, _) -> printfn "解析成功: %A" rxn
-    | Failure (errMsg, _, _) -> printfn "解析失败: %s" errMsg
-
-// 调用 parseTest 函数，使用 RxnParser 模块中的解析器和测试输入。
-RxnParseTest parseString test3
