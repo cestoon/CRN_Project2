@@ -78,3 +78,31 @@ let checkRandomOrderCommands () =
         printfn "%A" (resSwappedStr = resOriginStr) |> ignore
 
 checkRandomOrderCommands ()
+
+let basicArbitraryTest (species1:Species) (species2:Species) (species3:Species) (species4:Species) (value1:Number) (value2:Number) (value3:Number) (value4:Number) =
+    let aCrn =
+        Crn([Conc (species1, value1); Conc (species2, value2); Conc (species3, value3); Conc (species4, value4)],
+        [Step
+            [Composable (Add (species1, species2, "resAdd"));
+            Composable (Sub (species3, species4, "resSub"))];
+        Step
+            [NonComposable (Cmp ("resAdd", "resSub"))];
+        Step
+            [Conditional (IfGT
+                [Composable (Mul ("resAdd", species1, species2))]);
+            Conditional (IfLE 
+                [Composable (Div ("resSub", species3, species4));
+                Composable (Sqrt ("resAdd", species1))])]])
+
+    let aState = State([])
+    let res = executeCRN aState aCrn
+    printfn "%A" res |> ignore
+    let finalState = List.last (List.ofSeq res)
+    printfn "%A" finalState.[species1] |> ignore
+    printfn "%A" finalState.[species2] |> ignore
+    printfn "%A" finalState.[species3] |> ignore
+    printfn "%A" finalState.[species4] |> ignore
+    printfn "%A" finalState.["resAdd"] |> ignore
+    printfn "%A" finalState.["resSub"] |> ignore
+
+basicArbitraryTest "a1" "2b" "cc33" "44DDDD" 0.1 0.2 2.3 4.5
