@@ -85,8 +85,8 @@ module TypeChecker =
                 |_, _, _ ->
                     checkSteps tail declaredSpecies isError hasCmp
 
-    let checkConc (Conc(species, _)) =
-        species
+    let checkConc (Conc(species, value)) =
+        species, value
 
     let containsDuplicates inputList =
         let distinctList = Seq.distinct inputList |> List.ofSeq
@@ -95,7 +95,10 @@ module TypeChecker =
     let checkCrn (crn: Crn): bool =
         match crn with
         |Crn(concs, steps) ->
-            let declaredSpecies = List.map checkConc concs
-            let isError = containsDuplicates declaredSpecies
-            if isError then printfn "found duplicate species"
-            checkSteps steps declaredSpecies isError false |> not
+            let concsTupleList = List.map checkConc concs
+            let declaredSpecies, values = List.unzip concsTupleList
+            let hasNegative = List.fold (fun hasNegative value -> (value < 0.0) || hasNegative) false values
+            if hasNegative then printfn "found duplicate species"
+            let hasDuplicate = containsDuplicates declaredSpecies
+            if hasDuplicate then printfn "found duplicate species"
+            checkSteps steps declaredSpecies (hasNegative||hasDuplicate) false |> not
