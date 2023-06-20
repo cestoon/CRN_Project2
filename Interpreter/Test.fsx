@@ -1,11 +1,13 @@
 #load "../AST/Library.fs";;
 #load "../State/Library.fs";;
+#load "../TypeChecker/Library.fs";;
 #load "Program.fs";;
 
 open System;;
 open AST.CRNPP;;
 open State.State;;
 open Interpreter.Execute;;
+open TypeChecker.TypeChecker;;
 
 0
 
@@ -77,8 +79,32 @@ let checkRandomOrderCommands () =
         let resSwappedStr = sprintf "%A" resSwapped
         printfn "%A" (resSwappedStr = resOriginStr) |> ignore
 
-checkRandomOrderCommands ()
+//checkRandomOrderCommands ()
 
+
+let calc (value1:float) value2 value3 value4 = 
+    let resAdd = value1 + value2
+    match value3, value4 with
+    |value3, value4 when value3 - value4 < 0.0 ->
+        let resSub = 0.0
+        match resAdd, resSub with
+        |resAdd, resSub when resAdd > resSub  ->
+            let value2 = resAdd * value1
+            value1, value2, resSub, value4, resAdd, resSub
+        |_,_ ->
+            let value4 = resSub / value3
+            let value1 = sqrt resAdd
+            value1, value2, resSub, value4, resAdd, resSub
+    |_,_ -> 
+        let resSub = value3 - value4
+        match resAdd, resSub with
+        |resAdd, resSub when resAdd > resSub  ->
+            let value2 = resAdd * value1
+            value1, value2, resSub, value4, resAdd, resSub
+        |_,_ ->
+            let value4 = resSub / value3
+            let value1 = sqrt resAdd
+            value1, value2, resSub, value4, resAdd, resSub
 let basicArbitraryTest (species1:Species) (species2:Species) (species3:Species) (species4:Species) (value1:Number) (value2:Number) (value3:Number) (value4:Number) =
     let aCrn =
         Crn([Conc (species1, value1); Conc (species2, value2); Conc (species3, value3); Conc (species4, value4)],
@@ -92,17 +118,28 @@ let basicArbitraryTest (species1:Species) (species2:Species) (species3:Species) 
                 [Composable (Mul ("resAdd", species1, species2))]);
             Conditional (IfLE 
                 [Composable (Div ("resSub", species3, species4));
-                Composable (Sqrt ("resAdd", species1))])]])
+                Composable (Sqrt ("resAdd", species1))])];
+        Step
+            [Composable (Ld ("resSub", species3))] ])
 
     let aState = State([])
     let res = executeCRN aState aCrn
     printfn "%A" res |> ignore
-    let finalState = List.last (List.ofSeq res)
-    printfn "%A" finalState.[species1] |> ignore
-    printfn "%A" finalState.[species2] |> ignore
-    printfn "%A" finalState.[species3] |> ignore
-    printfn "%A" finalState.[species4] |> ignore
-    printfn "%A" finalState.["resAdd"] |> ignore
-    printfn "%A" finalState.["resSub"] |> ignore
+    printfn "after res" |> ignore
+    //let resCheck = checkCrn aCrn
+    //printfn "%A" resCheck |> ignore
+    match aCrn with
+    |Crn(concs, steps) ->
+        let res = Seq.truncate (steps.Length) res
+        let finalState = List.last (List.ofSeq res)
+        printfn "before List.ofSeq res" |> ignore
+        printfn "%A" (List.ofSeq res) |> ignore
+        let value1, value2, value3, value4, resAdd, resSub = calc value1 value2 value3 value4 
+        printfn "%A" (finalState.[species1] = value1) |> ignore
+        printfn "%A" (finalState.[species2] = value2) |> ignore
+        printfn "%A" (finalState.[species3] = value3) |> ignore
+        printfn "%A" (finalState.[species4] = value4) |> ignore
+        printfn "%A" (finalState.["resAdd"] = resAdd) |> ignore
+        printfn "%A" (finalState.["resSub"] = resSub) |> ignore
 
-basicArbitraryTest "a1" "2b" "cc33" "44DDDD" 0.1 0.2 2.3 4.5
+basicArbitraryTest "a1" "2b" "cc33" "44DDDD" 4.3 0.984 21.0 4.5
