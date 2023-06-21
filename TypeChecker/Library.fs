@@ -36,10 +36,10 @@ module TypeChecker =
 
             |NonComposable (Cmp(species1, species2))->
                 let inputs = [species1; species2]
-                //declaredSpecies should include inputs, otherwise there is cyclical dependency
-                let isCyclicalDependency = (Set.ofList inputs) <> (Set.intersect (Set.ofList inputs) (Set.ofList declaredSpecies))
-                if isCyclicalDependency then printfn "found cyclical dependency"
-                checkCommandList tail declaredSpecies (isError || isCyclicalDependency) outputs true hasConditional
+                //declaredSpecies should include inputs, otherwise there is unknwon species
+                let isUnknownSpecies = (Set.ofList inputs) <> (Set.intersect (Set.ofList inputs) (Set.ofList declaredSpecies))
+                if isUnknownSpecies then printfn "unknwon species"
+                checkCommandList tail declaredSpecies (isError || isUnknownSpecies) outputs true hasConditional
 
             |Conditional conditional ->
                 match conditional with
