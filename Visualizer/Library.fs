@@ -3,21 +3,25 @@
 open Plotly.NET
 open State.State
 open AST.CRNPP
-open Plotly.NET.TraceObjects
 open Plotly.NET.LayoutObjects
+open System.IO
 
 module Visualizer =
 
-    let getLineShape line =
-        match line with
-        | "Hv" -> StyleParam.Shape.Hv
-        | "Hvh" -> StyleParam.Shape.Hvh
-        | "Vh" -> StyleParam.Shape.Vh
-        | "Vhv" -> StyleParam.Shape.Vhv
-        | "Spline" -> StyleParam.Shape.Spline
-        | "Linear" -> StyleParam.Shape.Linear
-        | _ -> failwith "No such style param"
+    let getSavePath() =
+        let folder = "./out"
+        let path = $"{folder}/Tree-{System.DateTime.Now.ToFileTime()}.html"
+        
+        if not (Directory.Exists folder) then Directory.CreateDirectory folder |> ignore
+        path
 
+    let getValues (states: seq<int*State>) (species: Species) =
+        states
+        |> Seq.map (fun (i, state) ->
+            match state.TryFind species with
+            | Some number -> (i, number)
+            | None -> (i, 0.0m) // If species is not present, assign a default y value (e.g., 0.0)
+        )
 
     let plotSpeciesStates
         (states: seq<State>)
@@ -25,22 +29,29 @@ module Visualizer =
         (xAxisMaxRange)
         (lineShape: StyleParam.Shape)
         =
-        let getXValues (states: seq<State>) = states |> Seq.mapi (fun i _ -> i) // Generate x-axis values (state numbers)
-
-        let getYValues (states: seq<State>) (species: Species) =
+        // Ensure that we only use some states to plot to ensure good performance
+        let plotSimLength = 1000
+        let states' = 
             states
-            |> Seq.map (fun state ->
-                match state.TryFind species with
-                | Some number -> number
-                | None -> 0.0 // If species is not present, assign a default value (e.g., 0.0)
-            )
+            |> Seq.cache 
+            |> Seq.indexed
+            |> Seq.truncate xAxisMaxRange
+            |> Seq.filter (fun (i,_) -> i%(xAxisMaxRange/plotSimLength)=0 || i+1=xAxisMaxRange)
 
         let traces =
             speciesList
             |> List.map (fun species ->
-                Chart.Line(x = getXValues states, y = getYValues states species, Name = species)
+                Chart.Line(xy = getValues states' species, Name = species)
                 |> Chart.withLineStyle (Shape = lineShape))
 
+        let xAxisLength = min xAxisMaxRange (Seq.last states' |> fst)
         Chart.combine (traces)
-        |> Chart.withXAxis (LinearAxis.init (Range = StyleParam.Range.ofMinMax (0, xAxisMaxRange)))
-        |> Chart.show
+        |> Chart.withXAxis (LinearAxis.init (Range = StyleParam.Range.ofMinMax (0, xAxisLength)))
+        |> Chart.saveHtml(getSavePath(), OpenInBrowser = true)
+
+
+    let plotInterpreterSpeciesStates  states speciesList xAxisMaxRange =
+        plotSpeciesStates states speciesList xAxisMaxRange StyleParam.Shape.Hv
+    
+    let plotSimulatorSpeciesStates  states speciesList xAxisMaxRange =
+        plotSpeciesStates states speciesList xAxisMaxRange StyleParam.Shape.Spline

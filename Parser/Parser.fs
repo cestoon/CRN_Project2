@@ -12,8 +12,8 @@ module CrnParser =
     let pSpecies = many1Satisfy (fun c -> isLetter c || isDigit c) |>> Species
 
     let pNumber = choice [
-            pfloat;
-            pint32 |>> fun n -> float n
+            pfloat |>> decimal;
+            pint32 |>> fun n -> decimal n
         ]
 
     let pConc: Parser<Conc, unit> = 
@@ -98,8 +98,8 @@ module RxnParser =
         sepBy1 pSpecies (symbol "+")
 
     let pNumber = choice [
-            pfloat;
-            pint32 |>> fun n -> float n
+            pfloat |>> decimal;
+            pint32 |>> fun n -> decimal n
         ]
 
     let pRxn: Parser<Rxn, unit> =

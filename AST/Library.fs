@@ -2,7 +2,7 @@
 
 module CRNPP =
     type Species = string
-    type Number = float
+    type Number = decimal
 
     type NonComposableS = Cmp of Species * Species
 
