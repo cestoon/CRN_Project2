@@ -1,4 +1,10 @@
-﻿namespace Compiler
+﻿// #############################################
+// # Authors: Mads                             #
+// # Contributor: Mads;                        #
+// # Date: Jun 12th                            #
+// # Last edit: June 12th                      #
+// #############################################
+namespace Compiler
 
 open AST.CRNPP
 open AST.Rxn

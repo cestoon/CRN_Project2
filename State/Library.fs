@@ -1,4 +1,10 @@
-﻿namespace State
+﻿// #############################################
+// # Authors: Mads                             #
+// # Contributor: Alina;                       #
+// # Date: Jun 12th                            #
+// # Last edit: June 14th                      #
+// #############################################
+namespace State
 
 open AST.CRNPP
 
