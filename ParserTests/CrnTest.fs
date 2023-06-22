@@ -2,14 +2,14 @@ module ParserTests
 
 open NUnit.Framework
 open FParsec
-open Parser
-open AST.CRNPP
+open CrnParser.CrnParser
+open AST
 open FsCheck
 open FsCheck.NUnit
 
 // this function is used to check if a given string is successfully parsed
 let IsParseSuccess (s: string) =
-        match parseString s with
+        match parseCrnString s with
         | Success _ -> true
         | Failure _ -> false
 
