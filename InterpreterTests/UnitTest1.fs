@@ -2,19 +2,10 @@ module InterpreterTests
 
 open FsCheck
 open FsCheck.NUnit
-open NUnit.Framework
 open System
 open AST.CRNPP
 open State.State
 open Interpreter.Execute
-open TypeChecker.TypeChecker
-
-open NUnit.Framework
-open FParsec
-open Parser
-open AST.CRNPP
-open FsCheck
-open FsCheck.NUnit
 
 let nonNegativeFloatGenerator =
     Gen.map NormalFloat.op_Explicit
@@ -56,29 +47,15 @@ let rec iterateSteps (steps: StepList) =
         let swappedStep = randomSwap step
         swappedStep :: (iterateSteps tail)
 
-[<TestCase>]
-let checkRandomOrderCommands () =
-    let approxPiStr = 
-        Crn([Conc ("four", 4.0); Conc ("divisor1", 1.0); Conc ("divisor2", 3.0);
-            Conc ("pi", 0.0)],
-        [Step
-            [Composable (Div ("four", "divisor1", "factor1"));
-            Composable (Add ("divisor1", "four", "divisor1Next"));
-            Composable (Div ("four", "divisor2", "factor2"));
-            Composable (Add ("divisor2", "four", "divisor2Next"));
-            Composable (Sub ("factor1", "factor2", "factor"));
-            Composable (Add ("pi", "factor", "piNext"))];
-        Step
-            [Composable (Ld ("divisor1Next", "divisor1"));
-            Composable (Ld ("divisor2Next", "divisor2"));
-            Composable (Ld ("piNext", "pi"))]])
+[<Property>]
+let checkRandomOrderCommands (crn) =
 
     let aState = State([])
-    let resOrigin = executeCRN aState approxPiStr
-    printfn "%A" approxPiStr |> ignore
+    let resOrigin = executeCRN aState crn
+    printfn "%A" crn |> ignore
     printfn "%A" resOrigin |> ignore
 
-    match approxPiStr with
+    match crn with
     |Crn(concs, steps) ->
         let swappedCrn = Crn(concs, (iterateSteps steps))
 
@@ -93,7 +70,7 @@ let checkRandomOrderCommands () =
         let resSwappedStr = sprintf "%A" resSwapped
         printfn "%A" (resSwappedStr = resOriginStr) |> ignore
         let res = resSwappedStr = resOriginStr
-        Assert.IsTrue(res)
+        res
 
 let calc (value1:float) value2 value3 value4 = 
     let resAdd = value1 + value2

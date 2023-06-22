@@ -1,7 +1,6 @@
 namespace RxnParser
 
 open FParsec
-open AST
 open AST.CRNPP
 open AST.Rxn
 
@@ -14,16 +13,21 @@ module RxnParser =
     let pExpr: Parser<Expr, unit> =
         sepBy1 pSpecies (symbol "+")
 
-    let pNumber = choice [
+    let pNumber: Parser<float,unit> = choice [
             pfloat;
             pint32 |>> fun n -> float n
         ]
 
-    let pEmptyString = (pstring "\"\"" <|> pstring "''") |>> fun _ -> []
+    let pEmptyString: Parser<Species list,unit> = (pstring "\"\"" <|> pstring "''") |>> fun _ -> []
 
     let pRxn: Parser<Rxn, unit> =
-        between (symbol "rxn" .>>. symbol "[") (symbol "]")
-            (pipe3 pExpr ((symbol "," .>> spaces) >>. (pExpr <|> pEmptyString)) ((symbol "," .>> spaces) >>. pNumber) (fun rs ps k -> Rxn (rs, ps, k)))
+        between 
+            (symbol "rxn" .>>. symbol "[") (symbol "]")
+            (pipe3 
+                pExpr 
+                ((symbol "," .>> spaces) >>. (pExpr <|> pEmptyString)) 
+                ((symbol "," .>> spaces) >>. pNumber) 
+                (fun rs ps k -> Rxn (rs, ps, k)))
 
 
     let pCrn: Parser<Rxn list, unit> =

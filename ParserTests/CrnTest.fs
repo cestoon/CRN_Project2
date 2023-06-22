@@ -189,13 +189,3 @@ let subtract() =
         }]
     };"
     Assert.IsTrue(IsParseSuccess subtractStr)
-
-// ... other ...
-// use FsCheck for property testing to check if parsing is successful
-// todo:: we can use generator later
-[<Property>]
-let PropertyTestingParsingSuccess(input: string) =
-    // FsCheck will generate various input strings
-    let isSuccess = IsParseSuccess input
-    // currently it is always false
-    Assert.IsFalse(isSuccess)
