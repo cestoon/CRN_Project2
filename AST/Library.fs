@@ -1,4 +1,10 @@
-﻿namespace AST
+﻿// #############################################
+// # Authors: Mads                             #
+// # Contributor: Mads & Alina                 #
+// # Date: Jun 12th                            #
+// # Last edit: June 22th                      #
+// #############################################
+namespace AST
 
 module CRNPP =
     type Species = string

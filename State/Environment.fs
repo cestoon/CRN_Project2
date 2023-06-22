@@ -1,3 +1,9 @@
+// #############################################
+// # Authors: Mads                             #
+// # Contributor: Mads;                        #
+// # Date: Jun 22th                            #
+// # Last edit: June 22th                      #
+// #############################################
 namespace State
 
 open AST

@@ -1,3 +1,9 @@
+// #############################################
+// # Authors: BingKun                          #
+// # Contributor: BingKun & JingSong & Mads    #
+// # Date: Jun 12th                            #
+// # Last edit: June 22th                      #
+// #############################################
 module Parser
 
 open FParsec

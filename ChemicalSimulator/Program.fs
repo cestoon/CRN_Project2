@@ -1,4 +1,10 @@
-﻿namespace ChemicalSimulator
+﻿// #############################################
+// # Authors: Mads                             #
+// # Contributor: Alina & Mads                 #
+// # Date: Jun 12th                            #
+// # Last edit: June 16th                      #
+// #############################################
+namespace ChemicalSimulator
 
 open AST.CRNPP
 open AST.Rxn
