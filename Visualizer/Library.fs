@@ -31,12 +31,13 @@ module Visualizer =
         =
         // Ensure that we only use some states to plot to ensure good performance
         let plotSimLength = 1000
+        let filterDevisor = max (xAxisMaxRange/plotSimLength) 1
         let states' = 
             states
             |> Seq.cache 
             |> Seq.indexed
             |> Seq.truncate xAxisMaxRange
-            |> Seq.filter (fun (i,_) -> i%(xAxisMaxRange/plotSimLength)=0 || i+1=xAxisMaxRange)
+            |> Seq.filter (fun (i,_) -> i%filterDevisor=0 || i+1=xAxisMaxRange)
 
         let traces =
             speciesList
