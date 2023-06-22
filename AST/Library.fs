@@ -31,11 +31,11 @@ module CRNPP =
         | NonComposable of NonComposableS
         | Conditional of ConditionalS
 
-    and CommandList = Command list //TODO?: decide if this should e implemented as (Command * Command list) to ensure minimum 1 element
+    and CommandList = Command list
 
     type Step = Step of CommandList
 
-    type StepList = Step list //TODO?: decide if this should e implemented as (Step * Step list) to ensure minimum 1 element
+    type StepList = Step list
 
     type Conc = Conc of Species * Number
 
@@ -43,28 +43,28 @@ module CRNPP =
 
     type Crn = Crn of RootList
 
-module Rxn = 
+module Rxn =
     type Expr = CRNPP.Species list
     type Rxn = Rxn of Expr * Expr * CRNPP.Number
 
-    let inline makeRxn rs ps k = Rxn (rs, ps, k)
+    let inline makeRxn rs ps k = Rxn(rs, ps, k)
     let inline (=>) rs ps = Rxn(rs, ps, 1)
     let inline (=|) rs k = fun ps -> Rxn(rs, ps, k)
     let inline (|=>) f ps = f ps
 
-    let addCatalysers cs (Rxn(rs, ps, k)) = Rxn(cs@rs, cs@ps, k)
-    let addCatalyser c (Rxn(rs, ps, k)) = Rxn(c::rs, c::ps, k)
+    let addCatalysers cs (Rxn(rs, ps, k)) = Rxn(cs @ rs, cs @ ps, k)
+    let addCatalyser c (Rxn(rs, ps, k)) = Rxn(c :: rs, c :: ps, k)
 
-    let private exprToRxnString (expr: Expr) = 
-        let strs = 
-            expr
-            |> List.map string
-        if strs.IsEmpty 
-        then "Ø"
-        else strs |> List.reduce (fun a b -> $"{a} + {b}") 
+    let private exprToRxnString (expr: Expr) =
+        let strs = expr |> List.map string
 
-    let prettyString (Rxn (rs, ps, k)) = 
-            let rsString = exprToRxnString rs
-            let psString = exprToRxnString ps
-            let arrow = if k.Equals(1.) then "--->" else $"-{k}->"
-            $"{rsString} {arrow} {psString}"
+        if strs.IsEmpty then
+            "Ø"
+        else
+            strs |> List.reduce (fun a b -> $"{a} + {b}")
+
+    let prettyString (Rxn(rs, ps, k)) =
+        let rsString = exprToRxnString rs
+        let psString = exprToRxnString ps
+        let arrow = if k.Equals(1.) then "--->" else $"-{k}->"
+        $"{rsString} {arrow} {psString}"
