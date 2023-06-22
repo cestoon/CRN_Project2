@@ -13,7 +13,11 @@ module Execute =
 
         | Sub(species1, species2, species3) ->
             let newSpeciesValue = state[species1] - state[species2]
-            state.Add(species3, newSpeciesValue)
+            match newSpeciesValue with
+            |newSpeciesValue when newSpeciesValue < 0 ->
+                state.Add(species3, 0)
+            |_ ->
+                state.Add(species3, newSpeciesValue)
 
         | Mul(species1, species2, species3) ->
             let newSpeciesValue = state[species1] * state[species2]
