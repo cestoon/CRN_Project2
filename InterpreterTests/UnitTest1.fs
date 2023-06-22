@@ -7,11 +7,8 @@ open System
 open AST.CRNPP
 open State.State
 open Interpreter.Execute
-open TypeChecker.TypeChecker
 
 open NUnit.Framework
-open FParsec
-open Parser
 open AST.CRNPP
 open FsCheck
 open FsCheck.NUnit
@@ -65,9 +62,11 @@ let checkRandomOrderCommands () =
             [Composable (Div ("four", "divisor1", "factor1"));
             Composable (Add ("divisor1", "four", "divisor1Next"));
             Composable (Div ("four", "divisor2", "factor2"));
-            Composable (Add ("divisor2", "four", "divisor2Next"));
-            Composable (Sub ("factor1", "factor2", "factor"));
-            Composable (Add ("pi", "factor", "piNext"))];
+            Composable (Add ("divisor2", "four", "divisor2Next"))];
+        Step
+            [Composable (Sub ("factor1", "factor2", "factor"))];
+        Step
+            [Composable (Add ("pi", "factor", "piNext"))];
         Step
             [Composable (Ld ("divisor1Next", "divisor1"));
             Composable (Ld ("divisor2Next", "divisor2"));
@@ -75,17 +74,12 @@ let checkRandomOrderCommands () =
 
     let aState = State([])
     let resOrigin = executeCRN aState approxPiStr
-    printfn "%A" approxPiStr |> ignore
-    printfn "%A" resOrigin |> ignore
 
     match approxPiStr with
     |Crn(concs, steps) ->
         let swappedCrn = Crn(concs, (iterateSteps steps))
-
         let aState = State([])
         let resSwapped = executeCRN aState swappedCrn
-        printfn "%A" swappedCrn |> ignore
-        printfn "%A" resSwapped |> ignore
         printfn "%A" (resSwapped = resOrigin) |> ignore
         //Sequence cannot be compared with =
         //so compare the printed string
