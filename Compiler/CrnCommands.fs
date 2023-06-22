@@ -2,7 +2,8 @@ namespace Compiler
 
 open AST.CRNPP
 open AST.Rxn
-open Compiler.Environment
+open State
+open State.Environment
 open Compiler
 
 module CrnCommands =
@@ -19,7 +20,7 @@ module CrnCommands =
             | Sub(a, b, c) -> 
                 let (h, env') = getNewHelperSpecies env
                 let rxns = [ 
-                    [a]    => [a; c ] 
+                    [a]    => [a; c] 
                     [b]    => [b; h]
                     [c]    => []
                     [c; h] => []
@@ -39,13 +40,13 @@ module CrnCommands =
                 (rxns, env)
             | Sqrt(a, b) ->
                 let rxns = [
-                    [a]    =|1.0|=> [a; b]
-                    [b; b] =|0.5|=> []
+                    [a]    =|1.0m|=> [a; b]
+                    [b; b] =|0.5m|=> []
                 ]
                 (rxns, env)
         toRxn >> RxnSystem.addClock
 
-
+    
     // Source: https://github.com/marko-vasic/crnPlusPlus/tree/master/packages/primitives.m
     // NormalizeToFlags[x_, y_] :=
     //     (
@@ -73,6 +74,9 @@ module CrnCommands =
     //             }]
     //         ]
     //     )
+    //  (*Code here ommitted to bring these two parts close to each other*)
+    //      AM[XgtyFlag, XltyFlag],
+    //      AM[YgtxFlag, YltxFlag]
     let compileNonComposable env = function
         | Cmp(x, y) -> 
             let (aproxMajorClock, env') = getNewClock env
@@ -83,39 +87,38 @@ module CrnCommands =
                   B = b; 
                   ComparisonOffset = offset } = env'.flagSpecies
 
-            let rxnSeq =
-                [ 
-                    [   // Mapping Reaction (turn x & y into an appropriate amount of the flag species) 
-                        [X_gty; y] => [X_lty; y]
-                        [X_lty; x] => [X_gty; x] 
-                        [X_lty; offset] => [X_gty; offset]
+            let mappingRxns =
+                [   // Mapping Reaction (turn x & y into an appropriate amount of the flag species) 
+                    [X_gty; y] => [X_lty; y]
+                    [X_lty; offset] => [X_gty; offset]
+                    [X_lty; x] => [X_gty; x] 
 
-                        [Y_gtx; x] => [Y_ltx; x]
-                        [Y_ltx; y] => [Y_gtx; y] 
-                        [Y_ltx; offset] => [Y_gtx; offset]  
-                    ] |> List.map (addCatalyser env'.stepClock)
+                    [Y_gtx; x] => [Y_ltx; x]
+                    [Y_ltx; offset] => [Y_gtx; offset]  
+                    [Y_ltx; y] => [Y_gtx; y] 
 
+                ] |> List.map (addCatalyser env'.stepClock)
                     
-                    [   // Aproximate Majority Reactions 
-                        [X_gty; X_lty] => [X_lty; b    ]
-                        [b;     X_lty] => [X_lty; X_lty]
-                        [X_lty; X_gty] => [X_gty; b    ]
-                        [b;     X_gty] => [X_gty; X_gty]
+            let aproxMajorityRxns =
+                [   // Aproximate Majority Reactions 
+                    [X_gty; X_lty] => [X_lty; b    ]
+                    [b;     X_lty] => [X_lty; X_lty]
+                    [X_lty; X_gty] => [X_gty; b    ]
+                    [b;     X_gty] => [X_gty; X_gty]
 
-                        [Y_gtx; Y_ltx] => [Y_ltx; b    ]
-                        [b;     Y_ltx] => [Y_ltx; Y_ltx]
-                        [Y_ltx; Y_gtx] => [Y_gtx; b    ]
-                        [b;     Y_gtx] => [Y_gtx; Y_gtx] 
-                    ] |> List.map (addCatalyser aproxMajorClock)
-                ]
-            (rxnSeq, env')
+                    [Y_gtx; Y_ltx] => [Y_ltx; b    ]
+                    [b;     Y_ltx] => [Y_ltx; Y_ltx]
+                    [Y_ltx; Y_gtx] => [Y_gtx; b    ]
+                    [b;     Y_gtx] => [Y_gtx; Y_gtx] 
+                ] |> List.map (addCatalyser aproxMajorClock)
+            let rxns = mappingRxns @ aproxMajorityRxns
+            (rxns, env')
 
 
     let rec compileConditional env cond = 
         let { Xgty = X_gty; Xlty = X_lty; Ygtx = Y_gtx; Yltx = Y_ltx } = env.flagSpecies
-        let compileMapBody f = RxnNetwork.compileMapMany (compileCommand) f env
+        let compileMapBody f = RxnSystem.compileMapMany (compileCommand) f env
 
-        // TODO: Test if clocks are needed here or if compileBody does it correctly for us
         match cond with
         | IfGT(cs) -> cs |> compileMapBody (addCatalysers [X_gty; Y_ltx])
         | IfGE(cs) -> cs |> compileMapBody (addCatalyser X_gty)
@@ -123,7 +126,7 @@ module CrnCommands =
         | IfLE(cs) -> cs |> compileMapBody (addCatalyser Y_gtx)
         | IfLT(cs) -> cs |> compileMapBody (addCatalysers [X_lty; Y_gtx])
 
-    and compileCommand (env: Environment) : Command -> RxnNetwork = function 
-        | Composable    c -> c |> compileComposable env |> RxnNetwork.fromRxnSystem 
+    and compileCommand (env: Environment) : Command -> RxnSystem = function 
+        | Composable    c -> c |> compileComposable env
         | NonComposable c -> c |> compileNonComposable env
         | Conditional   c -> c |> compileConditional env

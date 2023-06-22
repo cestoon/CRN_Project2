@@ -3,6 +3,8 @@
 open AST.CRNPP
 open AST.Rxn
 open State.State
+open State.Environment
+open State
 
 
 module ChemicalSimulator =
@@ -11,7 +13,20 @@ module ChemicalSimulator =
 
     let tryMap k v m =
         m
-        |> Map.change k (fun o -> o |> Option.defaultValue 0. |> (fun a -> a + v) |> Some)
+        |> Map.change k (fun o -> 
+            o 
+            |> Option.orElse (Some 0m) 
+            |> Option.map (fun a -> a + v))
+    
+    let netChange s m = m |> tryGetWithDefault s 0
+
+    let ( ** ) d = function
+        | 0 -> 1m
+        | 1 -> d
+        | n -> 
+            d
+            |> List.replicate n
+            |> List.reduce (fun a b -> a * b) 
 
     let calculateNetChangePerReaction allSpecies (Rxn(rs, ps, k)) =
         let rsMultiplicity = rs |> List.countBy (id) |> Map.ofList
@@ -36,9 +51,10 @@ module ChemicalSimulator =
         (state: State)
         =
         rs
+        |> List.countBy id
         |> List.fold
-            (fun acc spec -> acc * (state |> tryGetWithDefault spec 0.))
-            (float (reactionNetChangeMap |> tryGetWithDefault species 0) * k)
+            (fun acc (spec, m_rxn) -> acc * ((state |> tryGetWithDefault spec 0m) ** m_rxn))
+            (decimal (netChange species reactionNetChangeMap) * k)
 
     let calculateDerivative stepSize species (reactions: Rxn list) state =
         reactions
@@ -47,15 +63,29 @@ module ChemicalSimulator =
             let reactionNetChangeMap = calculateNetChangePerReaction allSpecies rxn
             (rxn, reactionNetChangeMap))
         |> List.sumBy (fun (rxn, changeMap) -> calculateDerivativePerReaction changeMap species rxn state)
-        |> (fun v -> tryMap species (v * stepSize) state)
 
+    let simulate stepSize (rxns, env)  =
+        let allSpecies = getAllSpecies env
+        let calculateSpeciesDerivative state spec  = calculateDerivative stepSize spec rxns state
 
-    let rec simulate stepSize speciesList rxns state =
-        let newState =
-            speciesList
-            |> List.fold (fun state spec -> calculateDerivative stepSize spec rxns state) state
+        let rec simulate' state =
+            let newState =
+                allSpecies
+                |> Set.map (fun spec -> 
+                    let derivative = calculateSpeciesDerivative state spec
+                    let speciesChange = derivative * stepSize 
+                    (spec, speciesChange))  
+                |> Set.fold (fun state (spec, change) -> state |> tryMap spec change) state
+            seq {
+                yield state
+                yield! simulate' newState
+            }
+        
+        simulate' env.initialConcentrations
+    
+    let simulateWithInitialState stepSize (rxns, env) state =
+        let addValue m k v = m |> Map.add k v
 
-        seq {
-            yield newState
-            yield! simulate stepSize speciesList rxns newState
-        }
+        let env' =
+            { env with initialConcentrations = state |> Map.fold (addValue) env.initialConcentrations }
+        simulate stepSize (rxns, env')

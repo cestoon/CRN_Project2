@@ -13,9 +13,9 @@ module RxnParser =
     let pExpr: Parser<Expr, unit> =
         sepBy1 pSpecies (symbol "+")
 
-    let pNumber: Parser<float,unit> = choice [
-            pfloat;
-            pint32 |>> fun n -> float n
+    let pNumber: Parser<decimal,unit> = choice [
+            pfloat |>> decimal
+            pint32 |>> fun n -> decimal n
         ]
 
     let pEmptyString: Parser<Species list,unit> = (pstring "\"\"" <|> pstring "''") |>> fun _ -> []

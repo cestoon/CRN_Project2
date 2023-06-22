@@ -4,7 +4,6 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Environment.fs" />
     <Compile Include="Compiler.fsi" />
     <Compile Include="Compiler.fs" />
     <Compile Include="CrnCommands.fsi" />
@@ -14,5 +13,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AST\AST.fsproj" />
+    <ProjectReference Include="..\State\State.fsproj" />
   </ItemGroup>
 </Project>

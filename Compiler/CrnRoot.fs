@@ -1,27 +1,27 @@
 namespace Compiler
 
 open AST.CRNPP
-open AST.Rxn
+open State
+open State.Environment
 
-open Compiler.Environment
-
-module CrnRoot =
-    let addConc env (Conc(spec, _)) = { env with species = Set.add spec env.species }
+module CrnRoot =   
+    let addConc env (Conc(spec, conc)) = 
+        { env with 
+            species = Set.add spec env.species 
+            initialConcentrations = env.initialConcentrations |> Map.add spec conc
+        }
     let addConcList env concs = concs |> List.fold (addConc) env
 
     let compileStep env (Step(cs)) = 
         let (_, env') = getNewStepClock env
         cs 
-        |> RxnNetwork.compileMany (CrnCommands.compileCommand) env'
+        |> RxnSystem.compileMany (CrnCommands.compileCommand) env'
 
     let compileStepList env steps = 
         steps 
-        |> RxnNetwork.compileMany (compileStep) env 
+        |> RxnSystem.compileMany (compileStep) env 
 
     let compileRootList env (concs, steps) = 
         env
         |> (fun e -> addConcList e concs)
         |> (fun e -> compileStepList e steps)
-
-    let compile (Crn(rootlist)) = 
-        compileRootList newUninitializedEnv rootlist

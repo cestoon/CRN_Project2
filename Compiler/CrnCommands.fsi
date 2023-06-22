@@ -1,12 +1,11 @@
 namespace Compiler
-open Compiler.Environment
+
 open AST.CRNPP
-open AST.Rxn
 open Compiler
 
 module CrnCommands =
-    val compileComposable: ReactionsCompiler<ComposableS>
-    val compileNonComposable: SequenceCompiler<NonComposableS>
-    val compileConditional: SequenceCompiler<ConditionalS>
+    val compileComposable: Compiler<ComposableS>
+    val compileNonComposable: Compiler<NonComposableS>
+    val compileConditional: Compiler<ConditionalS>
 
-    val compileCommand: SequenceCompiler<Command>
+    val compileCommand: Compiler<Command>

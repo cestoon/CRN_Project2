@@ -9,10 +9,10 @@ open Interpreter.Execute
 
 let nonNegativeFloatGenerator =
     Gen.map NormalFloat.op_Explicit
-            Arb.generate<NormalFloat> |> Gen.filter (fun i -> i > 0)
+            Arb.generate<NormalFloat> |> Gen.filter (fun i -> i > 0) |> Gen.map decimal
 
 type nonNegativeFloatGenerators =
-    static member float() = Arb.fromGen nonNegativeFloatGenerator
+    static member decimal() = Arb.fromGen nonNegativeFloatGenerator
 
 Arb.register<nonNegativeFloatGenerators>() |> ignore
 
@@ -72,18 +72,18 @@ let checkRandomOrderCommands (crn) =
         let res = resSwappedStr = resOriginStr
         res
 
-let calc (value1:float) value2 value3 value4 = 
+let calc (value1: decimal) (value2: decimal) (value3: decimal) (value4: decimal) = 
     let resAdd = value1 + value2
     match value3, value4 with
-    |value3, value4 when value3 - value4 < 0.0 ->
-        let resSub = 0.0
+    |value3, value4 when value3 - value4 < 0.0m ->
+        let resSub = 0.0m
         match resAdd, resSub with
         |resAdd, resSub when resAdd > resSub  ->
             let value2 = resAdd * value1
             value1, value2, resSub, value4, resAdd, resSub
         |_,_ ->
             let value4 = resSub / value3
-            let value1 = sqrt resAdd
+            let value1 = sqrt (float resAdd) |> decimal
             value1, value2, resSub, value4, resAdd, resSub
     |_,_ -> 
         let resSub = value3 - value4
@@ -93,7 +93,7 @@ let calc (value1:float) value2 value3 value4 =
             value1, value2, resSub, value4, resAdd, resSub
         |_,_ ->
             let value4 = resSub / value3
-            let value1 = sqrt resAdd
+            let value1 = sqrt (float resAdd) |> decimal
             value1, value2, resSub, value4, resAdd, resSub
 
 [<Property(Arbitrary=[|typeof<nonNegativeFloatGenerators>|])>]

@@ -28,7 +28,7 @@ module Execute =
             state.Add(species3, newSpeciesValue)
 
         | Sqrt(species1, species2) ->
-            let newSpeciesValue = sqrt state[species1]
+            let newSpeciesValue = double state[species1] |> sqrt |> decimal
             state.Add(species2, newSpeciesValue)
 
     let executeNonComposableCommand (state: State) (command: NonComposableS) =

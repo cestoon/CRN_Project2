@@ -97,7 +97,7 @@ module TypeChecker =
         |Crn(concs, steps) ->
             let concsTupleList = List.map checkConc concs
             let declaredSpecies, values = List.unzip concsTupleList
-            let hasNegative = List.fold (fun hasNegative value -> (value < 0.0) || hasNegative) false values
+            let hasNegative = List.fold (fun hasNegative value -> (value < 0.0m) || hasNegative) false values
             if hasNegative then printfn "found negative species"
             let hasDuplicate = containsDuplicates declaredSpecies
             if hasDuplicate then printfn "found duplicate species"
