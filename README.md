@@ -53,9 +53,9 @@ This project is analogous to the Interpreter in that it transforms an input into
 
 This project implements functions that provides functions that transform states into charts. The way in which it does it is up to us, but it should have functions suitable for for both the interpreter and the ChemicalSimulator. It may additionally make use of the Drawing_Trees solution to make renderings of an AST.
 
-### CompilerTests
+### InterpreterTests
 
-This project holds tests for the compiler. In the project description it says to test that compiled and interpreted code produces the same output. Such tests also go here.
+This project holds tests for the interpreter. In the project description it says to test that compiled and interpreted code produces the same output. Such tests also go here.
 
 ## Project development order  
 
