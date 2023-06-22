@@ -1,5 +1,7 @@
 module InterpreterTests
 
+open FsCheck
+open FsCheck.NUnit
 open NUnit.Framework
 open System
 open AST.CRNPP
@@ -7,9 +9,21 @@ open State.State
 open Interpreter.Execute
 open TypeChecker.TypeChecker
 
-[<SetUp>]
-let Setup () =
-    ()
+open NUnit.Framework
+open FParsec
+open Parser
+open AST.CRNPP
+open FsCheck
+open FsCheck.NUnit
+
+let nonNegativeFloatGenerator =
+    Gen.map NormalFloat.op_Explicit
+            Arb.generate<NormalFloat> |> Gen.filter (fun i -> i > 0)
+
+type nonNegativeFloatGenerators =
+    static member float() = Arb.fromGen nonNegativeFloatGenerator
+
+Arb.register<nonNegativeFloatGenerators>() |> ignore
 
 let randomSwap (step: Step) =
     let random = Random()
@@ -35,16 +49,15 @@ let randomSwap (step: Step) =
                 )
             Step(resCommands)
 
+let rec iterateSteps (steps: StepList) =
+    match steps with
+    |[] -> []
+    |step::tail ->
+        let swappedStep = randomSwap step
+        swappedStep :: (iterateSteps tail)
+
 [<TestCase>]
 let checkRandomOrderCommands () =
-
-    let rec iterateSteps (steps: StepList) =
-        match steps with
-        |[] -> []
-        |step::tail ->
-            let swappedStep = randomSwap step
-            swappedStep :: (iterateSteps tail)
-
     let approxPiStr = 
         Crn([Conc ("four", 4.0); Conc ("divisor1", 1.0); Conc ("divisor2", 3.0);
             Conc ("pi", 0.0)],
@@ -79,7 +92,8 @@ let checkRandomOrderCommands () =
         let resOriginStr = sprintf "%A" resOrigin
         let resSwappedStr = sprintf "%A" resSwapped
         printfn "%A" (resSwappedStr = resOriginStr) |> ignore
-        resSwappedStr = resOriginStr
+        let res = resSwappedStr = resOriginStr
+        Assert.IsTrue(res)
 
 let calc (value1:float) value2 value3 value4 = 
     let resAdd = value1 + value2
@@ -105,8 +119,13 @@ let calc (value1:float) value2 value3 value4 =
             let value1 = sqrt resAdd
             value1, value2, resSub, value4, resAdd, resSub
 
-[<Property>]
+[<Property(Arbitrary=[|typeof<nonNegativeFloatGenerators>|])>]
 let basicArbitraryTest (species1:Species) (species2:Species) (species3:Species) (species4:Species) (value1:Number) (value2:Number) (value3:Number) (value4:Number) =
+    //species must be unique
+    let specieses = [species1; species2; species3; species4]
+    let distinctSequence = Seq.distinct specieses
+    List.length specieses = Seq.length distinctSequence
+    ==>
     let aCrn =
         Crn([Conc (species1, value1); Conc (species2, value2); Conc (species3, value3); Conc (species4, value4)],
         [Step
@@ -125,23 +144,11 @@ let basicArbitraryTest (species1:Species) (species2:Species) (species3:Species) 
 
     let aState = State([])
     let res = executeCRN aState aCrn
-    printfn "%A" res |> ignore
-    printfn "after res" |> ignore
-    //let resCheck = checkCrn aCrn
-    //printfn "%A" resCheck |> ignore
     match aCrn with
     |Crn(concs, steps) ->
         let res = Seq.truncate (steps.Length) res
         let finalState = List.last (List.ofSeq res)
-        printfn "before List.ofSeq res" |> ignore
-        printfn "%A" (List.ofSeq res) |> ignore
         let value1, value2, value3, value4, resAdd, resSub = calc value1 value2 value3 value4 
-        printfn "%A" (finalState.[species1] = value1) |> ignore
-        printfn "%A" (finalState.[species2] = value2) |> ignore
-        printfn "%A" (finalState.[species3] = value3) |> ignore
-        printfn "%A" (finalState.[species4] = value4) |> ignore
-        printfn "%A" (finalState.["resAdd"] = resAdd) |> ignore
-        printfn "%A" (finalState.["resSub"] = resSub) |> ignore
         finalState.[species1] = value1 && finalState.[species2] = value2 &&
         finalState.[species3] = value3 && finalState.[species4] = value4 &&
         finalState.["resAdd"] = resAdd && finalState.["resSub"] = resSub
