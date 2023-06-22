@@ -1,3 +1,9 @@
+// #############################################
+// # Authors: BingKun                          #
+// # Contributor: BingKun & JinSong            #
+// # Date: Jun 12th                            #
+// # Last edit: June 19th                      #
+// #############################################
 namespace CrnParser
 
 open FParsec

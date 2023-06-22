@@ -1,3 +1,9 @@
+// #############################################
+// # Authors: BingKun                          #
+// # Contributor: BingKun                      #
+// # Date: Jun 12th                            #
+// # Last edit: June 19th                      #
+// #############################################
 namespace RxnParser
 
 open FParsec

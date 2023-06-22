@@ -1,3 +1,9 @@
+// #############################################
+// # Authors: Mads                             #
+// # Contributor: Mads;                        #
+// # Date: Jun 16th                            #
+// # Last edit: June 16th                      #
+// #############################################
 namespace Compiler
 
 open AST.CRNPP

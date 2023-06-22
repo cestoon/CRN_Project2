@@ -1,4 +1,10 @@
-﻿namespace Visualizer
+﻿// #############################################
+// # Authors: Mads                             #
+// # Contributor: Alina;                       #
+// # Date: Jun 12th                            #
+// # Last edit: June 16th                      #
+// #############################################
+namespace Visualizer
 
 open Plotly.NET
 open State.State

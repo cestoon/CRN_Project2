@@ -1,4 +1,10 @@
-﻿namespace Interpreter
+﻿// #############################################
+// # Authors: Mads                             #
+// # Contributor: Alina;                       #
+// # Date: Jun 12th                            #
+// # Last edit: June 16th                      #
+// #############################################
+namespace Interpreter
 
 open AST.CRNPP
 open State.State
