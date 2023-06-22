@@ -1,6 +1,5 @@
 ﻿// #############################################
-// # Authors: Mads                             #
-// # Contributor: Alina & Mads                 #
+// # Authors: Alina & Mads                     #
 // # Date: Jun 12th                            #
 // # Last edit: June 16th                      #
 // #############################################
