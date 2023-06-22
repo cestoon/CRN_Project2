@@ -1,6 +1,5 @@
 // #############################################
 // # Authors: BingKun                          #
-// # Contributor: BingKun                      #
 // # Date: Jun 19th                            #
 // # Last edit: June 19th                      #
 // #############################################
@@ -27,23 +26,23 @@ let RxnParseTest parseRxn s =
 
 
 [<TestCase>]
-let ``Test for empty production`` () = 
+let ``Test for empty production`` () =
     let test = "rxn[C, \"\", 1.0]"
     Assert.IsTrue(RxnParseTest parseRxnString test)
 
 [<TestCase>]
-let ``Test Parsing for different reaction speed`` () = 
+let ``Test Parsing for different reaction speed`` () =
     let test1 = "rxn[A+B, A+B+C, 2.0]"
     Assert.IsTrue(RxnParseTest parseRxnString test1)
 
 [<TestCase>]
-let ``Test Parsing for baisc reaction`` () = 
+let ``Test Parsing for baisc reaction`` () =
     Assert.IsTrue(RxnParseTest parseRxnString test1)
 
 [<TestCase>]
-let ``Test for lowercase`` () = 
+let ``Test for lowercase`` () =
     Assert.IsTrue(RxnParseTest parseRxnString test2)
 
 [<TestCase>]
-let ``Test for rxn combination`` () = 
+let ``Test for rxn combination`` () =
     Assert.IsTrue(RxnParseTest parseRxnString test3)

@@ -1,6 +1,5 @@
 ﻿// #############################################
-// # Authors: Mads                             #
-// # Contributor: Alina & Mads                 #
+// # Authors: Alina, Mads                      #
 // # Date: Jun 12th                            #
 // # Last edit: June 16th                      #
 // #############################################
@@ -14,14 +13,16 @@ open System.IO
 
 module Visualizer =
 
-    let getSavePath() =
+    let getSavePath () =
         let folder = "./out"
         let path = $"{folder}/Tree-{System.DateTime.Now.ToFileTime()}.html"
-        
-        if not (Directory.Exists folder) then Directory.CreateDirectory folder |> ignore
+
+        if not (Directory.Exists folder) then
+            Directory.CreateDirectory folder |> ignore
+
         path
 
-    let getValues (states: seq<int*State>) (species: Species) =
+    let getValues (states: seq<int * State>) (species: Species) =
         states
         |> Seq.map (fun (i, state) ->
             match state.TryFind species with
@@ -37,13 +38,14 @@ module Visualizer =
         =
         // Ensure that we only use some states to plot to ensure good performance
         let plotSimLength = 1000
-        let filterDevisor = max (xAxisMaxRange/plotSimLength) 1
-        let states' = 
+        let filterDevisor = max (xAxisMaxRange / plotSimLength) 1
+
+        let states' =
             states
-            |> Seq.cache 
+            |> Seq.cache
             |> Seq.indexed
             |> Seq.truncate xAxisMaxRange
-            |> Seq.filter (fun (i,_) -> i%filterDevisor=0 || i+1=xAxisMaxRange)
+            |> Seq.filter (fun (i, _) -> i % filterDevisor = 0 || i + 1 = xAxisMaxRange)
 
         let traces =
             speciesList
@@ -52,13 +54,14 @@ module Visualizer =
                 |> Chart.withLineStyle (Shape = lineShape))
 
         let xAxisLength = min xAxisMaxRange (Seq.last states' |> fst)
+
         Chart.combine (traces)
         |> Chart.withXAxis (LinearAxis.init (Range = StyleParam.Range.ofMinMax (0, xAxisLength)))
-        |> Chart.saveHtml(getSavePath(), OpenInBrowser = true)
+        |> Chart.saveHtml (getSavePath (), OpenInBrowser = true)
 
 
-    let plotInterpreterSpeciesStates  states speciesList xAxisMaxRange =
+    let plotInterpreterSpeciesStates states speciesList xAxisMaxRange =
         plotSpeciesStates states speciesList xAxisMaxRange StyleParam.Shape.Hv
-    
-    let plotSimulatorSpeciesStates  states speciesList xAxisMaxRange =
+
+    let plotSimulatorSpeciesStates states speciesList xAxisMaxRange =
         plotSpeciesStates states speciesList xAxisMaxRange StyleParam.Shape.Spline
