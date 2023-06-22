@@ -1,6 +1,6 @@
 // #############################################
 // # Authors: JinSong                          #
-// # Contributor: JinSong;                        #
+// # Contributor: JinSong;                     #
 // # Date: Jun 19th                            #
 // # Last edit: June 19th                      #
 // #############################################

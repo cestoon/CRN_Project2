@@ -1,6 +1,6 @@
 // #############################################
 // # Authors: JinSong                          #
-// # Contributor: JinSong & Mads               #
+// # Contributor: JinSong                      #
 // # Date: Jun 21th                            #
 // # Last edit: June 22th                      #
 // #############################################
@@ -12,6 +12,10 @@ open System
 open AST.CRNPP
 open State.State
 open Interpreter.Execute
+open NUnit.Framework
+open AST.CRNPP
+open FsCheck
+open FsCheck.NUnit
 
 let nonNegativeFloatGenerator =
     Gen.map NormalFloat.op_Explicit
@@ -53,22 +57,32 @@ let rec iterateSteps (steps: StepList) =
         let swappedStep = randomSwap step
         swappedStep :: (iterateSteps tail)
 
-[<Property>]
-let checkRandomOrderCommands (crn) =
+[<TestCase>]
+let checkRandomOrderCommands () =
+    let approxPiStr = 
+        Crn([Conc ("four", Number(4.0)); Conc ("divisor1", Number(1.0)); Conc ("divisor2", Number(3.0));
+            Conc ("pi", Number(0.0))],
+        [Step
+            [Composable (Div ("four", "divisor1", "factor1"));
+            Composable (Add ("divisor1", "four", "divisor1Next"));
+            Composable (Div ("four", "divisor2", "factor2"));
+            Composable (Add ("divisor2", "four", "divisor2Next"))];
+        Step
+            [Composable (Sub ("factor1", "factor2", "factor"))];
+        Step
+            [Composable (Add ("pi", "factor", "piNext"))];
+        Step
+            [Composable (Ld ("divisor1Next", "divisor1"));
+            Composable (Ld ("divisor2Next", "divisor2"));
+            Composable (Ld ("piNext", "pi"))]])
 
     let aState = State([])
-    let resOrigin = executeCRN aState crn
-    printfn "%A" crn |> ignore
-    printfn "%A" resOrigin |> ignore
-
-    match crn with
+    let resOrigin = executeCRN aState approxPiStr
+    match approxPiStr with
     |Crn(concs, steps) ->
         let swappedCrn = Crn(concs, (iterateSteps steps))
-
         let aState = State([])
         let resSwapped = executeCRN aState swappedCrn
-        printfn "%A" swappedCrn |> ignore
-        printfn "%A" resSwapped |> ignore
         printfn "%A" (resSwapped = resOrigin) |> ignore
         //Sequence cannot be compared with =
         //so compare the printed string
@@ -76,7 +90,7 @@ let checkRandomOrderCommands (crn) =
         let resSwappedStr = sprintf "%A" resSwapped
         printfn "%A" (resSwappedStr = resOriginStr) |> ignore
         let res = resSwappedStr = resOriginStr
-        res
+        Assert.IsTrue(res)
 
 let calc (value1: decimal) (value2: decimal) (value3: decimal) (value4: decimal) = 
     let resAdd = value1 + value2
