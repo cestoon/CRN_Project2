@@ -1,4 +1,10 @@
-﻿namespace TypeChecker
+﻿// #############################################
+// # Authors: Mads                             #
+// # Contributor: JinSong                      #
+// # Date: Jun 16th                            #
+// # Last edit: June 22th                      #
+// #############################################
+namespace TypeChecker
 open AST.CRNPP
 
 module TypeChecker = 
