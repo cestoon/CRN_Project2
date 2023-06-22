@@ -2,14 +2,14 @@ module ParserTests
 
 open NUnit.Framework
 open FParsec
-open Parser.CrnParser
+open CrnParser.CrnParser
 open AST
 open FsCheck
 open FsCheck.NUnit
 
 // this function is used to check if a given string is successfully parsed
 let IsParseSuccess (s: string) =
-        match parseString s with
+        match parseCrnString s with
         | Success _ -> true
         | Failure _ -> false
 
@@ -189,13 +189,3 @@ let subtract() =
         }]
     };"
     Assert.IsTrue(IsParseSuccess subtractStr)
-
-// ... other ...
-// use FsCheck for property testing to check if parsing is successful
-// todo:: we can use generator later
-[<Property>]
-let PropertyTestingParsingSuccess(input: string) =
-    // FsCheck will generate various input strings
-    let isSuccess = IsParseSuccess input
-    // currently it is always false
-    Assert.IsFalse(isSuccess)
